@@ -30,17 +30,15 @@ public:
         std::wstring wideString = converter.from_bytes(path);
 	    std::locale utf8_locale(std::locale(), new std::codecvt_utf8<wchar_t>);
 
-        try {
-        std::filesystem::remove(wideString);
-        } catch (const std::filesystem::filesystem_error& e) {
-            FLAlertLayer::create(
+       if (std::remove(path.c_str()) != 0) {
+         FLAlertLayer::create(
     		"Delete Macro",   
     		"There was an <cr>error</c> deleting this macro.",  
     		"OK"      
 		    )->show();
             return;
-        }
-            
+    }
+
         if (this->getParent()->getParent()->getChildren()->count() == 1)  {
             CCLabelBMFont* noMacroLbl = CCLabelBMFont::create("No macros.", "bigFont.fnt");
             noMacroLbl->setAlignment(CCTextAlignment::kCCTextAlignmentCenter);
