@@ -123,7 +123,7 @@ public:
             return;
             }
             std::ofstream copiedMacro(Mod::get()->getSaveDir().string()
-            + "\\" + path.filename().string(), std::ios::binary);
+            + "/" + path.filename().string(), std::ios::binary);
 
             if (!copiedMacro.is_open()) {
                 FLAlertLayer::create(
