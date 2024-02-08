@@ -360,7 +360,7 @@ void saveMacroPopup::saveMacro(CCObject*) {
 	}
 
 	std::string savePath = Mod::get()->getSaveDir().string()
-     +"\\"+std::string(macroNameInput->getString()) + ".xd";
+     +"/"+std::string(macroNameInput->getString()) + ".xd";
 
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
     std::wstring wideString = converter.from_bytes(savePath);
@@ -407,7 +407,7 @@ void saveMacroPopup::saveMacro(CCObject*) {
 
 void macroCell::handleLoad(CCObject* btn) {
 	std::string loadPath = Mod::get()->getSaveDir().string()
-    +"\\"+static_cast<CCMenuItemSpriteExtra*>(btn)->getID() + ".xd";
+    +"/"+static_cast<CCMenuItemSpriteExtra*>(btn)->getID() + ".xd";
 	recorder.macro.clear();
 
 
