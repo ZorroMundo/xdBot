@@ -24,7 +24,7 @@ public:
 
     void handleDelete(CCObject* btn) {
 	    std::string path = Mod::get()->getSaveDir().string()
-        +"\\"+static_cast<CCMenuItemSpriteExtra*>(btn)->getID() + ".xd";
+        +"/"+static_cast<CCMenuItemSpriteExtra*>(btn)->getID() + ".xd";
 
         std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
         std::wstring wideString = converter.from_bytes(path);
