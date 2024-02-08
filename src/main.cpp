@@ -673,52 +673,26 @@ class $modify(GJBaseGameLayer) {
 				stateLabel = nullptr;
 			}
 		}
-		
 		if (recorder.state == state::recording) {
-			if (stateLabel != nullptr) {
-				if (stateLabel->getString() != "Recording" && Mod::get()->getSettingValue<bool>("show_recording_label"))
-					stateLabel->setString("Recording");
-				else if (!Mod::get()->getSettingValue<bool>("show_recording_label")) {
-					stateLabel->removeFromParent();
-					stateLabel = nullptr;
-				}
-			} else if (Mod::get()->getSettingValue<bool>("show_recording_label")) {
-				addLabel("Recording");
-			}
-			if (Mod::get()->getSettingValue<bool>("frame_stepper") && stepFrame == false) 
-				return;
-			else if (stepFrame) {
-				GJBaseGameLayer::update(1.f/fixedFps);
-				stepFrame = false;
-				recorder.syncMusic();
-			} else GJBaseGameLayer::update(dt);
-		} else GJBaseGameLayer::update(dt);
-		
-	}
-};
-
-void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
-	reinterpret_cast<void(__thiscall *)(GJBaseGameLayer *)>(base::get() + 0x1BD240)(self);
-	if (recorder.state == state::recording) {
 		if (((playerHolding && !Mod::get()->getSettingValue<bool>("vanilla")) ||
 		Mod::get()->getSettingValue<bool>("frame_fix")) && !recorder.macro.empty()) {
 			
 			if (!(recorder.macro.back().frame == recorder.currentFrame() &&
 			(recorder.macro.back().posOnly || recorder.macro.back().p1.xPos != 0))) {
 				playerData p1 = {
-					self->m_player1->getPositionX(),
-					self->m_player1->getPositionY(),
-					self->m_player1->m_isUpsideDown,
+					this->m_player1->getPositionX(),
+					this->m_player1->getPositionY(),
+					this->m_player1->m_isUpsideDown,
 					-80085,
 					-80085,
 					-80085
 				};
 				playerData p2;
-				if (self->m_player2 != nullptr) {
+				if (this->m_player2 != nullptr) {
 					p2 = {
-					self->m_player2->getPositionX(),
-					self->m_player2->getPositionY(),
-					self->m_player2->m_isUpsideDown,
+					this->m_player2->getPositionX(),
+					this->m_player2->getPositionY(),
+					this->m_player2->m_isUpsideDown,
 					-80085,
 					-80085,
 					-80085
@@ -744,7 +718,7 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 			}
 			int frame = recorder.currentFrame();
         	while (recorder.currentAction < static_cast<int>(recorder.macro.size()) &&
-			frame >= recorder.macro[recorder.currentAction].frame && !self->m_player1->m_isDead) {
+			frame >= recorder.macro[recorder.currentAction].frame && !this->m_player1->m_isDead) {
             	auto& currentActionIndex = recorder.macro[recorder.currentAction];
 
 				if (!safeModeEnabled) {
@@ -752,50 +726,50 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 					safeMode::updateSafeMode();
 				}
 				if (!Mod::get()->getSettingValue<bool>("override_macro_mode") && currentActionIndex.p1.xPos != 0) {
-						if (!areEqual(self->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
-						!areEqual(self->m_player1->getPositionY(), currentActionIndex.p1.yPos))
-								self->m_player1->setPosition(cocos2d::CCPoint(currentActionIndex.p1.xPos, currentActionIndex.p1.yPos));
+						if (!areEqual(this->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
+						!areEqual(this->m_player1->getPositionY(), currentActionIndex.p1.yPos))
+								this->m_player1->setPosition(cocos2d::CCPoint(currentActionIndex.p1.xPos, currentActionIndex.p1.yPos));
 
-						if (self->m_player1->m_isUpsideDown != currentActionIndex.p1.upsideDown && currentActionIndex.posOnly)
-							self->m_player1->flipGravity(currentActionIndex.p1.upsideDown, true);
+						if (this->m_player1->m_isUpsideDown != currentActionIndex.p1.upsideDown && currentActionIndex.posOnly)
+							this->m_player1->flipGravity(currentActionIndex.p1.upsideDown, true);
 
 					
-						if (currentActionIndex.p2.xPos != 0 && self->m_player2 != nullptr) {
-							if (!areEqual(self->m_player2->getPositionX(), currentActionIndex.p2.xPos) ||
-							!areEqual(self->m_player2->getPositionY(), currentActionIndex.p2.yPos))
-								self->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
+						if (currentActionIndex.p2.xPos != 0 && this->m_player2 != nullptr) {
+							if (!areEqual(this->m_player2->getPositionX(), currentActionIndex.p2.xPos) ||
+							!areEqual(this->m_player2->getPositionY(), currentActionIndex.p2.yPos))
+								this->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
 
-							if (self->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
-								self->m_player2->flipGravity(currentActionIndex.p1.upsideDown, true);
+							if (this->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
+								this->m_player2->flipGravity(currentActionIndex.p1.upsideDown, true);
 
 						}
 				} else {
-				if ((currentActionIndex.p1.xPos != 0 && self->m_player1 != nullptr) && (!Mod::get()->getSettingValue<bool>("vanilla") || Mod::get()->getSettingValue<bool>("frame_fix"))) {
+				if ((currentActionIndex.p1.xPos != 0 && this->m_player1 != nullptr) && (!Mod::get()->getSettingValue<bool>("vanilla") || Mod::get()->getSettingValue<bool>("frame_fix"))) {
 					if (((!Mod::get()->getSettingValue<bool>("vanilla") && !Mod::get()->getSettingValue<bool>("frame_fix")) && lastHold)
 					|| Mod::get()->getSettingValue<bool>("frame_fix")) {
-						if (!areEqual(self->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
-						!areEqual(self->m_player1->getPositionY(), currentActionIndex.p1.yPos))
-							self->m_player1->setPosition(cocos2d::CCPoint(currentActionIndex.p1.xPos, currentActionIndex.p1.yPos));
+						if (!areEqual(this->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
+						!areEqual(this->m_player1->getPositionY(), currentActionIndex.p1.yPos))
+							this->m_player1->setPosition(cocos2d::CCPoint(currentActionIndex.p1.xPos, currentActionIndex.p1.yPos));
 							
 
-						if (self->m_player1->m_isUpsideDown != currentActionIndex.p1.upsideDown && currentActionIndex.posOnly)
-							self->m_player1->flipGravity(currentActionIndex.p1.upsideDown, true);
+						if (this->m_player1->m_isUpsideDown != currentActionIndex.p1.upsideDown && currentActionIndex.posOnly)
+							this->m_player1->flipGravity(currentActionIndex.p1.upsideDown, true);
 
 					
-						if (currentActionIndex.p2.xPos != 0 && self->m_player2 != nullptr) {
-							if (!areEqual(self->m_player2->getPositionX(), currentActionIndex.p2.xPos) ||
-							!areEqual(self->m_player2->getPositionY(), currentActionIndex.p2.yPos))
-								self->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
+						if (currentActionIndex.p2.xPos != 0 && this->m_player2 != nullptr) {
+							if (!areEqual(this->m_player2->getPositionX(), currentActionIndex.p2.xPos) ||
+							!areEqual(this->m_player2->getPositionY(), currentActionIndex.p2.yPos))
+								this->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
 
-							if (self->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
-								self->m_player2->flipGravity(currentActionIndex.p1.upsideDown, true);
+							if (this->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
+								this->m_player2->flipGravity(currentActionIndex.p1.upsideDown, true);
 
 						}
 					}
 				}
 				}
 				if (!currentActionIndex.posOnly) {
-					self->handleButton(currentActionIndex.holding, currentActionIndex.button, currentActionIndex.player1);
+					this->handleButton(currentActionIndex.holding, currentActionIndex.button, currentActionIndex.player1);
 					if (currentActionIndex.holding) lastHold = true;
 					else lastHold = false;
 				}
@@ -806,7 +780,33 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 				if (stateLabel!=nullptr) stateLabel->removeFromParent();
 				clearState(true);
 			}
-		}
+}
+		if (recorder.state == state::recording) {
+			if (stateLabel != nullptr) {
+				if (stateLabel->getString() != "Recording" && Mod::get()->getSettingValue<bool>("show_recording_label"))
+					stateLabel->setString("Recording");
+				else if (!Mod::get()->getSettingValue<bool>("show_recording_label")) {
+					stateLabel->removeFromParent();
+					stateLabel = nullptr;
+				}
+			} else if (Mod::get()->getSettingValue<bool>("show_recording_label")) {
+				addLabel("Recording");
+			}
+			if (Mod::get()->getSettingValue<bool>("frame_stepper") && stepFrame == false) 
+				return;
+			else if (stepFrame) {
+				GJBaseGameLayer::update(1.f/fixedFps);
+				stepFrame = false;
+				recorder.syncMusic();
+			} else GJBaseGameLayer::update(dt);
+		} else GJBaseGameLayer::update(dt);
+		
+	}
+};
+
+void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
+	reinterpret_cast<void(__thiscall *)(GJBaseGameLayer *)>(base::get() + 0x1BD240)(self);
+	
 }
 
 class $modify(PlayLayer) {
@@ -974,7 +974,7 @@ $execute {
 	if (Mod::get()->getSavedValue<float>("previous_speed"))
 		prevSpeed = Mod::get()->getSavedValue<float>("previous_speed");
 	
-	Mod::get()->hook(reinterpret_cast<void *>(base::get() + 0x1BD240), &GJBaseGameLayerProcessCommands, "GJBaseGameLayer::processCommands", tulip::hook::TulipConvention::Thiscall);
+	//Mod::get()->hook(reinterpret_cast<void *>(base::get() + 0x1BD240), &GJBaseGameLayerProcessCommands, "GJBaseGameLayer::processCommands", tulip::hook::TulipConvention::Thiscall);
 	for (std::size_t i = 0; i < 15; i++) {
 		safeMode::patches[i] = Mod::get()->patch(reinterpret_cast<void*>(base::get() + std::get<0>(safeMode::codes[i])),
 		std::get<1>(safeMode::codes[i])).unwrap();
