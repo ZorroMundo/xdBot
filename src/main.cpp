@@ -917,7 +917,7 @@ class $modify(CCScheduler) {
 		}
 
 		using namespace std::literals;
-		float dt2 = (1.f / fixedFps);
+		float dt2 = (1.f / 60);
 		dt = (recorder.state == state::recording) ? dt * speedhackValue : dt;
     	auto startTime = std::chrono::high_resolution_clock::now();
 		int mult = static_cast<int>((dt + leftOver)/dt2);  
