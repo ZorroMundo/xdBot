@@ -410,14 +410,9 @@ void macroCell::handleLoad(CCObject* btn) {
     +"\\"+static_cast<CCMenuItemSpriteExtra*>(btn)->getID() + ".xd";
 	recorder.macro.clear();
 
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    std::wstring wideString = converter.from_bytes(loadPath);
-	std::locale utf8_locale(std::locale(), new std::codecvt_utf8<wchar_t>);
 
-
-    std::wifstream file(wideString);
-    file.imbue(utf8_locale);
-	std::wstring line;
+    std::ifstream file(loadPath);
+	std::string line;
 	if (!file.is_open()) {
 		FLAlertLayer::create(
     	"Load Macro",   
@@ -427,7 +422,7 @@ void macroCell::handleLoad(CCObject* btn) {
 		return;
 	}
 	while (std::getline(file, line)) {
-		std::wistringstream isSS(line);
+		std::istringstream isSS(line);
 
 		playerData p1;
 		playerData p2;
@@ -437,7 +432,7 @@ void macroCell::handleLoad(CCObject* btn) {
 		float p2xPos, p2yPos, p2rotation, p2xSpeed, p2ySpeed;
 		int p1upsideDown, p2upsideDown;
 
-		wchar_t s;
+		char s;
 		int count = 0;
     	for (char ch : line) {
         	if (ch == '|') {
@@ -451,7 +446,7 @@ void macroCell::handleLoad(CCObject* btn) {
 		 	>> s >> p1rotation >> s >> p1xSpeed >> s >>
 		 	p1ySpeed >> s >> p2xPos >> s >> p2yPos >> s >> p2upsideDown
 		 	>> s >> p2rotation >> s >> p2xSpeed >> s >>
-		 	p2ySpeed && s == L'|') {
+		 	p2ySpeed && s == '|') {
 				p1 = {
 					(float)p1xPos,
 					(float)p1yPos,
@@ -472,7 +467,7 @@ void macroCell::handleLoad(CCObject* btn) {
 			}
 		} else {
 			if (isSS >> frame >> s >> holding >> s >> button >> 
-			s >> player1 && s == L'|') {
+			s >> player1 && s == '|') {
 				p1.xPos = 0;
 				recorder.macro.push_back({(bool)player1, (int)frame, (int)button, (bool)holding, false, p1, p2});
 			}
