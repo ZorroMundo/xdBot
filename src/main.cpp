@@ -586,6 +586,7 @@ class $modify(GJBaseGameLayer) {
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else {
+			if (xd != nullptr) {
 			if (!xd->posOnly && xd->p1.xPos != 0) {
 						if (!areEqual(this->m_player1->getPositionX(), xd->p1.xPos) ||
 						!areEqual(this->m_player1->getPositionY(), xd->p1.yPos))
@@ -597,6 +598,7 @@ class $modify(GJBaseGameLayer) {
 								this->m_player2->setPosition(cocos2d::CCPoint(xd->p2.xPos, xd->p2.yPos));
 						}
 				}
+		}
 		}
 	}
 		GJBaseGameLayer::handleButton(holding,button,player1);
