@@ -557,6 +557,7 @@ void addButton(const char* id) {
         	PlayLayer::get(),
 	nullptr
     	);
+	advanceFrameBtn = btn;
 	auto winSize = CCDirector::sharedDirector()->getWinSize();
 	btn->setPosition(winSize/2 + CCPOINT_CREATE(-winSize.width/2, -winSize.height/2) + CCPOINT_CREATE(6, 30));
 	
