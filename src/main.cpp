@@ -538,6 +538,8 @@ class $modify(PauseLayer) {
 
 };
 
+data& c = nullptr;
+
 void addLabel(const char* text) {
 	auto label = CCLabelBMFont::create(text, "chatFont.fnt");
 	auto winSize = CCDirector::sharedDirector()->getWinSize();
@@ -557,7 +559,6 @@ void addLabel(const char* text) {
 
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
-		GJBaseGameLayer::handleButton(holding,button,player1);
 		if (recorder.state != state::off) {
 		if (recorder.state == state::recording) {
 			playerData p1;
@@ -585,28 +586,21 @@ class $modify(GJBaseGameLayer) {
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else {
-			auto& currentActionIndex = recorder.macro[recorder.currentAction];
+			auto& currentActionIndex = c;
 			if (!currentActionIndex.posOnly && currentActionIndex.p1.xPos != 0) {
 						if (!areEqual(this->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
 						!areEqual(this->m_player1->getPositionY(), currentActionIndex.p1.yPos))
 								this->m_player1->setPosition(cocos2d::CCPoint(currentActionIndex.p1.xPos, currentActionIndex.p1.yPos));
-
-						if (this->m_player1->m_isUpsideDown != currentActionIndex.p1.upsideDown && currentActionIndex.posOnly)
-							this->m_player1->flipGravity(currentActionIndex.p1.upsideDown, true);
-
 					
 						if (currentActionIndex.p2.xPos != 0 && this->m_player2 != nullptr) {
 							if (!areEqual(this->m_player2->getPositionX(), currentActionIndex.p2.xPos) ||
 							!areEqual(this->m_player2->getPositionY(), currentActionIndex.p2.yPos))
 								this->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
-
-							if (this->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
-								this->m_player2->flipGravity(currentActionIndex.p1.upsideDown, true);
-
 						}
 				}
 		}
 	}
+		GJBaseGameLayer::handleButton(holding,button,player1);
 	}
 
 	int getPlayer1(int p1, GJBaseGameLayer* bgl) {
@@ -682,7 +676,7 @@ class $modify(GJBaseGameLayer) {
         	while (recorder.currentAction < static_cast<int>(recorder.macro.size()) &&
 			frame >= recorder.macro[recorder.currentAction].frame && !this->m_player1->m_isDead) {
             	auto& currentActionIndex = recorder.macro[recorder.currentAction];
-
+				c = currentActionIndex;
 				if (!currentActionIndex.posOnly)
 					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
 					static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)][currentActionIndex.button-1]),
