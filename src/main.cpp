@@ -34,6 +34,11 @@ bool areEqual(float a, float b) {
 CCLabelBMFont* frameLabel = nullptr;
 CCLabelBMFont* stateLabel = nullptr;
 
+CCMenu* buttonsMenu = nullptr;
+CCMenuItemSpriteExtra* advanceFrameBtn = nullptr;
+CCMenuItemSpriteExtra* disableFSBtn = nullptr;
+CCMenuItemSpriteExtra* speedhackBtn = nullptr;
+
 using namespace geode::prelude;
 
 
@@ -537,9 +542,25 @@ class $modify(PauseLayer) {
 	}
 
 };
-
-data* c = nullptr;
-
+void addButton(const char* id) {
+	CCSprite* spr = nullptr;
+	if (id == "advance_frame_btn") {
+		spr = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
+	} else {
+		spr = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
+    	}
+	spr->setScale(0.8f);
+    	auto btn = CCMenuItemSpriteExtra::create(
+        	spr,
+        	this,
+	nullptr;
+    	);
+	label->setPosition(winSize/2 + CCPOINT_CREATE(-winSize.width/2, -winSize.height/2) + CCPOINT_CREATE(6, 30));
+	
+	btn->setScale(0.7f);
+	buttonsMenu->addChild(btn);
+	
+}
 void addLabel(const char* text) {
 	auto label = CCLabelBMFont::create(text, "chatFont.fnt");
 	auto winSize = CCDirector::sharedDirector()->getWinSize();
@@ -643,6 +664,23 @@ class $modify(GJBaseGameLayer) {
 		}
 		
 		if (recorder.state == state::recording) {
+			if (buttonsMenu != nullptr) {
+			if (advanceFrameBtn != nullptr) {
+				if (Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
+					try {
+						advanceFrameBtn->removeFromParent();
+
+					} catch (const std::exception& e) {
+					log::debug("wtfffff? - {}",e);
+				}
+
+				} else addButton("advance_frame_btn");
+			}
+			} else if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
+				buttonsMenu = CCMenu::create()->setPosition({0,0});
+				PlayLayer::get()->addChild(buttonsMenu);
+				addButton("advance_frame_btn");
+			}
 			if (stateLabel != nullptr) {
 				if (stateLabel->getString() != "Recording" && Mod::get()->getSettingValue<bool>("show_recording_label"))
 					stateLabel->setString("Recording");
