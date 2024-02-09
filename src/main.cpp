@@ -553,7 +553,7 @@ void addButton(const char* id) {
     	auto btn = CCMenuItemSpriteExtra::create(
         	spr,
         	PlayLayer::get(),
-	nullptr;
+	nullptr
     	);
 	auto winSize = CCDirector::sharedDirector()->getWinSize();
 	label->setPosition(winSize/2 + CCPOINT_CREATE(-winSize.width/2, -winSize.height/2) + CCPOINT_CREATE(6, 30));
