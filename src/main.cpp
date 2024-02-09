@@ -306,7 +306,7 @@ void saveMacroPopup::openSaveMacro(CCObject*) {
 }
 
 void saveMacroPopup::saveMacro(CCObject*) {
-  if (std::string(macroNameInput->getString()).length() < 1) {
+   if (std::string(macroNameInput->getString()).length() < 1) {
 		FLAlertLayer::create(
     	"Save Macro",   
     	"Macro name can't be <cl>empty</c>.",  
@@ -337,6 +337,7 @@ void saveMacroPopup::saveMacro(CCObject*) {
 			"|" << action.p2.rotation << "|" << action.p2.xSpeed <<
 			"|" << action.p2.ySpeed  << "\n";
 		}
+
 		file.close();
 		CCArray* children = CCDirector::sharedDirector()->getRunningScene()->getChildren();
 		CCObject* child;
@@ -557,6 +558,7 @@ void addLabel(const char* text) {
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
 		GJBaseGameLayer::handleButton(holding,button,player1);
+		if (recorder.state != state::off) {
 		if (recorder.state == state::recording) {
 			playerData p1;
 			playerData p2;
@@ -582,7 +584,29 @@ class $modify(GJBaseGameLayer) {
 			}
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
+		} else {
+			auto& currentActionIndex = recorder.macro[recorder.currentAction];
+			if (!currentActionIndex.posOnly && currentActionIndex.p1.xPos != 0) {
+						if (!areEqual(this->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
+						!areEqual(this->m_player1->getPositionY(), currentActionIndex.p1.yPos))
+								this->m_player1->setPosition(cocos2d::CCPoint(currentActionIndex.p1.xPos, currentActionIndex.p1.yPos));
+
+						if (this->m_player1->m_isUpsideDown != currentActionIndex.p1.upsideDown && currentActionIndex.posOnly)
+							this->m_player1->flipGravity(currentActionIndex.p1.upsideDown, true);
+
+					
+						if (currentActionIndex.p2.xPos != 0 && this->m_player2 != nullptr) {
+							if (!areEqual(this->m_player2->getPositionX(), currentActionIndex.p2.xPos) ||
+							!areEqual(this->m_player2->getPositionY(), currentActionIndex.p2.yPos))
+								this->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
+
+							if (this->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
+								this->m_player2->flipGravity(currentActionIndex.p1.upsideDown, true);
+
+						}
+				}
 		}
+	}
 	}
 
 	int getPlayer1(int p1, GJBaseGameLayer* bgl) {
@@ -658,26 +682,6 @@ class $modify(GJBaseGameLayer) {
         	while (recorder.currentAction < static_cast<int>(recorder.macro.size()) &&
 			frame >= recorder.macro[recorder.currentAction].frame && !this->m_player1->m_isDead) {
             	auto& currentActionIndex = recorder.macro[recorder.currentAction];
-
-				if (!currentActionIndex.posOnly && currentActionIndex.p1.xPos != 0) {
-						if (!areEqual(this->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
-						!areEqual(this->m_player1->getPositionY(), currentActionIndex.p1.yPos))
-								this->m_player1->setPosition(cocos2d::CCPoint(currentActionIndex.p1.xPos, currentActionIndex.p1.yPos));
-
-						if (this->m_player1->m_isUpsideDown != currentActionIndex.p1.upsideDown && currentActionIndex.posOnly)
-							this->m_player1->flipGravity(currentActionIndex.p1.upsideDown, true);
-
-					
-						if (currentActionIndex.p2.xPos != 0 && this->m_player2 != nullptr) {
-							if (!areEqual(this->m_player2->getPositionX(), currentActionIndex.p2.xPos) ||
-							!areEqual(this->m_player2->getPositionY(), currentActionIndex.p2.yPos))
-								this->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
-
-							if (this->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
-								this->m_player2->flipGravity(currentActionIndex.p1.upsideDown, true);
-
-						}
-				}
 
 				if (!currentActionIndex.posOnly)
 					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
