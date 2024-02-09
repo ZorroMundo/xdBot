@@ -114,7 +114,7 @@ public:
    	std::vector<data> macro;
 
 	int currentFrame() {
-		return static_cast<int>((*(double*)(((char*)PlayLayer::get()) + 0x330)) * fixedFps); // m_time * fps
+		return static_cast<int>((*(double*)(((char*)PlayLayer::get()) + 0x5B4)) * fixedFps); // m_time * fps
 	}
 	void syncMusic() {
 		FMODAudioEngine::sharedEngine()->setMusicTimeMS(
