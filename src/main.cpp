@@ -474,7 +474,9 @@ void clearState() {
     FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
 	channel->setPitch(1);
 	recorder.state = state::off;
-	
+	advanceFrameBtn = nullptr;
+	speedhackBtn = nullptr;
+	buttonsMenu = nullptr;
 	leftOver = 0.f;
 	if (PlayLayer::get()) {
 		CCArray* children = PlayLayer::get()->getChildren();
@@ -670,9 +672,10 @@ class $modify(GJBaseGameLayer) {
 				if (Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
 					try {
 						advanceFrameBtn->removeFromParent();
+						advanceFrameBtn = nullptr;
 
 					} catch (const std::exception& e) {
-					log::debug("wtfffff? - {}",e);
+					log::debug("wtfffffjdhddu? - {}",e);
 				}
 
 				} else addButton("advance_frame_btn");
