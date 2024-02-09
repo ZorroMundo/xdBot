@@ -538,7 +538,7 @@ class $modify(PauseLayer) {
 
 };
 
-data& c;
+data* c = nullptr;
 
 void addLabel(const char* text) {
 	auto label = CCLabelBMFont::create(text, "chatFont.fnt");
@@ -556,7 +556,7 @@ void addLabel(const char* text) {
 	}
 	PlayLayer::get()->addChild(label);
 }
-
+data* xd = nullptr;
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
 		if (recorder.state != state::off) {
@@ -586,16 +586,15 @@ class $modify(GJBaseGameLayer) {
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else {
-			auto& currentActionIndex = c;
-			if (!currentActionIndex.posOnly && currentActionIndex.p1.xPos != 0) {
-						if (!areEqual(this->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
-						!areEqual(this->m_player1->getPositionY(), currentActionIndex.p1.yPos))
-								this->m_player1->setPosition(cocos2d::CCPoint(currentActionIndex.p1.xPos, currentActionIndex.p1.yPos));
+			if (!xd->posOnly && xd->p1.xPos != 0) {
+						if (!areEqual(this->m_player1->getPositionX(), xd->p1.xPos) ||
+						!areEqual(this->m_player1->getPositionY(), xd->p1.yPos))
+								this->m_player1->setPosition(cocos2d::CCPoint(xd->p1.xPos, xd->p1.yPos));
 					
-						if (currentActionIndex.p2.xPos != 0 && this->m_player2 != nullptr) {
-							if (!areEqual(this->m_player2->getPositionX(), currentActionIndex.p2.xPos) ||
-							!areEqual(this->m_player2->getPositionY(), currentActionIndex.p2.yPos))
-								this->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
+						if (xd->p2.xPos != 0 && this->m_player2 != nullptr) {
+							if (!areEqual(this->m_player2->getPositionX(), xd->p2.xPos) ||
+							!areEqual(this->m_player2->getPositionY(), xd->p2.yPos))
+								this->m_player2->setPosition(cocos2d::CCPoint(xd->p2.xPos, xd->p2.yPos));
 						}
 				}
 		}
@@ -676,7 +675,7 @@ class $modify(GJBaseGameLayer) {
         	while (recorder.currentAction < static_cast<int>(recorder.macro.size()) &&
 			frame >= recorder.macro[recorder.currentAction].frame && !this->m_player1->m_isDead) {
             	auto& currentActionIndex = recorder.macro[recorder.currentAction];
-				c = currentActionIndex;
+				xd = &currentActionIndex;
 				if (!currentActionIndex.posOnly)
 					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
 					static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)][currentActionIndex.button-1]),
