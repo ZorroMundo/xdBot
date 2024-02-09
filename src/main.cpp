@@ -22,6 +22,11 @@ bool lastHold = false;
 bool shouldPlay = false;
 bool shouldPlay2 = false;
 
+int playerEnums[2][3] = {
+    {cocos2d::enumKeyCodes::KEY_ArrowUp, cocos2d::enumKeyCodes::KEY_ArrowLeft, cocos2d::enumKeyCodes::KEY_ArrowRight}, 
+    {cocos2d::enumKeyCodes::KEY_W, cocos2d::enumKeyCodes::KEY_A, cocos2d::enumKeyCodes::KEY_D}
+};
+
 bool areEqual(float a, float b) {
     return std::abs(a - b) < 0.1f;
 }
@@ -64,7 +69,7 @@ public:
    	std::vector<data> macro;
 
 	int currentFrame() {
-		return static_cast<int>((*(double*)(((char*)PlayLayer::get()) + 0x330)) * fixedFps); // m_time * fps
+		return static_cast<int>((*(double*)(((char*)PlayLayer::get()) + 0x320)) * fixedFps);
 	}
 	void syncMusic() {
 		FMODAudioEngine::sharedEngine()->setMusicTimeMS(
@@ -74,7 +79,8 @@ public:
 		);
 	}
 	void recordAction(bool holding, int button, bool player1, int frame, GJBaseGameLayer* bgl, playerData p1Data, playerData p2Data) {
-    	macro.push_back({player1, frame, button, holding, false, p1Data, p2Data});
+    	bool realp1 = (GameManager::get()->getGameVariable("0010") && !bgl->m_levelSettings->m_platformerMode) ? !player1 : player1;
+		macro.push_back({realp1, frame, button, holding, false, p1Data, p2Data});
 	}
 
 };
@@ -88,7 +94,7 @@ class RecordLayer : public geode::Popup<std::string const&> {
 protected:
     bool setup(std::string const& value) override {
         auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
-		auto versionLabel = CCLabelBMFont::create("xdBot v1.3.10 - made by Zilko", "chatFont.fnt");
+		auto versionLabel = CCLabelBMFont::create("xdBot Mobile v1.0.0 - made by Zilko", "chatFont.fnt");
 		versionLabel->setOpacity(60);
 		versionLabel->setAnchorPoint(CCPOINT_CREATE(0.0f,0.5f));
 		versionLabel->setPosition(winSize/2 + CCPOINT_CREATE(-winSize.width/2, -winSize.height/2) + CCPOINT_CREATE(3, 6));
@@ -554,17 +560,6 @@ class $modify(GJBaseGameLayer) {
 		if (recorder.state == state::recording) {
 			playerData p1;
 			playerData p2;
-			if (!Mod::get()->getSettingValue<bool>("vanilla") || Mod::get()->getSettingValue<bool>("frame_fix")) {
-				if (!Mod::get()->getSettingValue<bool>("frame_fix")) playerHolding = holding;
-				if (!recorder.macro.empty()) {
-					try {
-						if (recorder.macro.back().frame == recorder.currentFrame() && recorder.macro.back().posOnly) {
-							recorder.macro.pop_back();
-						}
-					} catch (const std::exception& e) {
-						log::debug("wtfffff AMAZ? - {}",e);
-					}
-				}
 				p1 = {
 				this->m_player1->getPositionX(),
 				this->m_player1->getPositionY(),
@@ -585,14 +580,17 @@ class $modify(GJBaseGameLayer) {
 			} else {
 				p2.xPos = 0;
 			}
-			} else {
-				p1.xPos = 0;
-			}
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		}
 	}
 
+	int getPlayer1(int p1, GJBaseGameLayer* bgl) {
+		bool player1;
+		if (GameManager::get()->getGameVariable("0010") && !bgl->m_levelSettings->m_platformerMode) player1 = !p1;
+		else player1 = p1;
+		return static_cast<int>(player1);
+	}
 
 	void update(float dt) {
 		if (recorder.state != state::off) {
@@ -682,7 +680,9 @@ class $modify(GJBaseGameLayer) {
 				}
 
 				if (!currentActionIndex.posOnly)
-					this->handleButton(currentActionIndex.holding, currentActionIndex.button, currentActionIndex.player1);
+					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
+					static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)][currentActionIndex.button-1]),
+					currentActionIndex.holding, false);
 
             	recorder.currentAction++;
         	}
