@@ -32,56 +32,6 @@ CCLabelBMFont* stateLabel = nullptr;
 using namespace geode::prelude;
 
 
-
-namespace safeMode
-{
-using opcode = std::pair<unsigned long, std::vector<uint8_t>>;
-
-	inline const std::array<opcode, 15> codes{
-		opcode{ 0x2DDC7E, { 0x0F, 0x84, 0xCA, 0x00, 0x00, 0x00 } },
-		{ 0x2DDD6A, { 0x0F, 0x84, 0xEA, 0x01, 0x00, 0x00 } },
-		{ 0x2DDD70, { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 } },
-		{ 0x2DDD77, { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 } },
-		{ 0x2DDEE5, { 0x90 } },
-		{ 0x2DDF6E, { 0x0F, 0x84, 0xC2, 0x02, 0x00, 0x00 } },
-
-		{ 0x2E6BDE, { 0x90, 0xE9, 0xAD, 0x00, 0x00, 0x00 } },
-		{ 0x2E6B32, { 0xEB, 0x0D } },
-		{ 0x2E69F4, { 0x0F, 0x4C, 0xC1 } },
-		{ 0x2E6993, { 0x90, 0xE9, 0x85, 0x01, 0x00, 0x00 } },
-
-		{ 0x2EACD0, { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 } },
-		{ 0x2EACD6, { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 } }, 
-		{ 0x2EACF7, { 0x90 } },
-
-		{ 0x2EA81F, { 0x6A, 0x00 } },
-		{ 0x2EA83D, { 0x90 } }
-	};
-	inline std::array<geode::Patch*, 15> patches;
-
-	void updateSafeMode() {
-		for (auto& patch : patches) {
-		if (safeModeEnabled) {
-			if (!patch->isEnabled()) {
-				try {
-					patch->enable();
-				} catch(const std::exception& e) {
-					log::debug("wtf? - {}", e);
-				}
-			}
-		} else {
-			if (patch->isEnabled()) {
-				try {
-					patch->disable();
-				} catch(const std::exception& e) {
-					log::debug("wtf 2? - {}", e);
-				}
-			}
-		}
-	}
-	}
-}
-
 struct playerData {
 	float xPos;
 	float yPos;
@@ -114,7 +64,7 @@ public:
    	std::vector<data> macro;
 
 	int currentFrame() {
-		return static_cast<int>((*(double*)(((char*)PlayLayer::get()) + 0x320)) * fixedFps); // m_time * fps
+		return static_cast<int>((*(double*)(((char*)PlayLayer::get()) + 0x330)) * fixedFps); // m_time * fps
 	}
 	void syncMusic() {
 		FMODAudioEngine::sharedEngine()->setMusicTimeMS(
@@ -410,9 +360,14 @@ void macroCell::handleLoad(CCObject* btn) {
     +"/"+static_cast<CCMenuItemSpriteExtra*>(btn)->getID() + ".xd";
 	recorder.macro.clear();
 
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    std::wstring wideString = converter.from_bytes(loadPath);
+	std::locale utf8_locale(std::locale(), new std::codecvt_utf8<wchar_t>);
 
-    std::ifstream file(loadPath);
-	std::string line;
+
+    std::wifstream file(wideString);
+    file.imbue(utf8_locale);
+	std::wstring line;
 	if (!file.is_open()) {
 		FLAlertLayer::create(
     	"Load Macro",   
@@ -422,7 +377,7 @@ void macroCell::handleLoad(CCObject* btn) {
 		return;
 	}
 	while (std::getline(file, line)) {
-		std::istringstream isSS(line);
+		std::wistringstream isSS(line);
 
 		playerData p1;
 		playerData p2;
@@ -432,7 +387,7 @@ void macroCell::handleLoad(CCObject* btn) {
 		float p2xPos, p2yPos, p2rotation, p2xSpeed, p2ySpeed;
 		int p1upsideDown, p2upsideDown;
 
-		char s;
+		wchar_t s;
 		int count = 0;
     	for (char ch : line) {
         	if (ch == '|') {
@@ -446,7 +401,7 @@ void macroCell::handleLoad(CCObject* btn) {
 		 	>> s >> p1rotation >> s >> p1xSpeed >> s >>
 		 	p1ySpeed >> s >> p2xPos >> s >> p2yPos >> s >> p2upsideDown
 		 	>> s >> p2rotation >> s >> p2xSpeed >> s >>
-		 	p2ySpeed && s == '|') {
+		 	p2ySpeed && s == L'|') {
 				p1 = {
 					(float)p1xPos,
 					(float)p1yPos,
@@ -467,7 +422,7 @@ void macroCell::handleLoad(CCObject* btn) {
 			}
 		} else {
 			if (isSS >> frame >> s >> holding >> s >> button >> 
-			s >> player1 && s == '|') {
+			s >> player1 && s == L'|') {
 				p1.xPos = 0;
 				recorder.macro.push_back({(bool)player1, (int)frame, (int)button, (bool)holding, false, p1, p2});
 			}
@@ -502,7 +457,7 @@ void macroCell::loadMacro(CCObject* button) {
 	} else handleLoad(button);
 }
 
-void clearState(bool safeMode) {
+void clearState() {
 	FMOD::ChannelGroup* channel;
     FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
 	channel->setPitch(1);
@@ -522,10 +477,6 @@ void clearState(bool safeMode) {
 	frameLabel = nullptr;
 	stateLabel = nullptr;
 	Mod::get()->setSettingValue("frame_stepper", false);
-	if (!safeMode) {
-		safeModeEnabled = false;
-		safeMode::updateSafeMode();
-	}
 }
 
 	// ---------------- Hooks ---------------- 539//
@@ -548,12 +499,12 @@ class $modify(PauseLayer) {
 
 	void onQuit(CCObject* sender) {
 		PauseLayer::onQuit(sender);
-		clearState(false);
+		clearState();
 	}
 
 	void goEdit() {
 		PauseLayer::goEdit();
-		clearState(false);
+		clearState();
 	}
 
 	void onResume(CCObject* sender) {
@@ -603,9 +554,40 @@ class $modify(GJBaseGameLayer) {
 		if (recorder.state == state::recording) {
 			playerData p1;
 			playerData p2;
-			
+			if (!Mod::get()->getSettingValue<bool>("vanilla") || Mod::get()->getSettingValue<bool>("frame_fix")) {
+				if (!Mod::get()->getSettingValue<bool>("frame_fix")) playerHolding = holding;
+				if (!recorder.macro.empty()) {
+					try {
+						if (recorder.macro.back().frame == recorder.currentFrame() && recorder.macro.back().posOnly) {
+							recorder.macro.pop_back();
+						}
+					} catch (const std::exception& e) {
+						log::debug("wtfffff AMAZ? - {}",e);
+					}
+				}
+				p1 = {
+				this->m_player1->getPositionX(),
+				this->m_player1->getPositionY(),
+				this->m_player1->m_isUpsideDown,
+				-80085,
+				-80085,
+				-80085
+			};
+			if (this->m_player2 != nullptr) {
+				p2 = {
+				this->m_player2->getPositionX(),
+				this->m_player2->getPositionY(),
+				this->m_player2->m_isUpsideDown,
+				-80085,
+				-80085,
+				-80085
+				};
+			} else {
 				p2.xPos = 0;
+			}
+			} else {
 				p1.xPos = 0;
+			}
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		}
@@ -642,6 +624,7 @@ class $modify(GJBaseGameLayer) {
 				stateLabel = nullptr;
 			}
 		}
+		
 		if (recorder.state == state::recording) {
 			if (stateLabel != nullptr) {
 				if (stateLabel->getString() != "Recording" && Mod::get()->getSettingValue<bool>("show_recording_label"))
@@ -660,10 +643,9 @@ class $modify(GJBaseGameLayer) {
 				stepFrame = false;
 				recorder.syncMusic();
 			} else GJBaseGameLayer::update(dt);
-		 
-	} else GJBaseGameLayer::update(dt);
-
-	if (recorder.state == state::playing) {
+		} else GJBaseGameLayer::update(dt);
+		
+		if (recorder.state == state::playing) {
 			if (stateLabel != nullptr) {
 				if (stateLabel->getString() != "Playing" && Mod::get()->getSettingValue<bool>("show_playing_label"))
 					stateLabel->setString("Playing");
@@ -679,24 +661,37 @@ class $modify(GJBaseGameLayer) {
 			frame >= recorder.macro[recorder.currentAction].frame && !this->m_player1->m_isDead) {
             	auto& currentActionIndex = recorder.macro[recorder.currentAction];
 
-				if (!safeModeEnabled) {
-					safeModeEnabled = true;
-					safeMode::updateSafeMode();
+				if (!currentActionIndex.posOnly && currentActionIndex.p1.xPos != 0) {
+						if (!areEqual(this->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
+						!areEqual(this->m_player1->getPositionY(), currentActionIndex.p1.yPos))
+								this->m_player1->setPosition(cocos2d::CCPoint(currentActionIndex.p1.xPos, currentActionIndex.p1.yPos));
+
+						if (this->m_player1->m_isUpsideDown != currentActionIndex.p1.upsideDown && currentActionIndex.posOnly)
+							this->m_player1->flipGravity(currentActionIndex.p1.upsideDown, true);
+
+					
+						if (currentActionIndex.p2.xPos != 0 && this->m_player2 != nullptr) {
+							if (!areEqual(this->m_player2->getPositionX(), currentActionIndex.p2.xPos) ||
+							!areEqual(this->m_player2->getPositionY(), currentActionIndex.p2.yPos))
+								this->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
+
+							if (this->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
+								this->m_player2->flipGravity(currentActionIndex.p1.upsideDown, true);
+
+						}
 				}
-                
-				if (!currentActionIndex.posOnly) {
+
+				if (!currentActionIndex.posOnly)
 					this->handleButton(currentActionIndex.holding, currentActionIndex.button, currentActionIndex.player1);
-					if (currentActionIndex.holding) lastHold = true;
-					else lastHold = false;
-				}
 
             	recorder.currentAction++;
         	}
 			if (recorder.currentAction >= recorder.macro.size()) {
 				if (stateLabel!=nullptr) stateLabel->removeFromParent();
-				clearState(true);
+				clearState();
 			}
-}
+		}
+
 	}
 };
 
@@ -710,40 +705,26 @@ class $modify(PlayLayer) {
 		
 		playerHolding = false;
 
-		if (safeModeEnabled) {
-			safeModeEnabled = false;
-			safeMode::updateSafeMode();
-		}
-		
-
 		if (recorder.state == state::playing) {
 			leftOver = 0.f;
 			recorder.currentAction = 0;
 			FMOD::ChannelGroup* channel;
         	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
         	channel->setPitch(1);
-		} else if (recorder.state == state::recording) {
+		} else if (recorder.state != state::off) {
         	if (this->m_isPracticeMode && !recorder.macro.empty() && recorder.currentFrame() != 0) {
   				int frame = recorder.currentFrame(); 
-            	auto condition = [&](data& actionIndex) -> bool {
-					return actionIndex.frame >= frame;
-				};
-				
 				try {
             	if (!recorder.macro.empty()) {
-						for (auto it = recorder.macro.begin(); it != recorder.macro.end();) {
-    						if (condition(*it)) {
-							if (!recorder.macro.empty()) {
+						for (auto it = recorder.macro.rbegin(); it != recorder.macro.rend(); ++it) {
+        					if (it->frame >= frame) {
 								try {
-        							it = recorder.macro.erase(it);
+									recorder.macro.erase((it + 1).base());
 								} catch (const std::exception& e) {
-							
+									log::debug("wtfffff amaze? - {}",e);
 								}
-							}
-    						} else {
-        						++it;
-    						}
-						}
+							} else break;
+    					}
 					if (recorder.macro.back().holding) {
                 	recorder.macro.push_back({
 						recorder.macro.back().player1,
@@ -766,7 +747,7 @@ class $modify(PlayLayer) {
 		if (recorder.state == state::recording)
 			shouldPlay2 = true;
 		
-		clearState(true);
+		clearState();
 	}
 };
 
@@ -777,17 +758,17 @@ class $modify(EndLevelLayer) {
 			shouldPlay2 = false;
 			shouldPlay = true;
 		}
-		clearState(false);
+		clearState();
 	}
 
 	void goEdit() {
 		EndLevelLayer::goEdit();
-		clearState(false);
+		clearState();
 	}
 
 	void onMenu(CCObject* s) {
 		EndLevelLayer::onMenu(s);
-		clearState(false);
+		clearState();
 	}
 };
 int syncCooldown = 0;
@@ -808,7 +789,7 @@ class $modify(CCScheduler) {
 		}
 
 		using namespace std::literals;
-		float dt2 = (1.f / fixedFps);
+		float dt2 = (1.f / ((recorder.state == state::recording) ? 60 : fixedFps));
 		dt = (recorder.state == state::recording) ? dt * speedhackValue : dt;
     	auto startTime = std::chrono::high_resolution_clock::now();
 		int mult = static_cast<int>((dt + leftOver)/dt2);  
@@ -864,10 +845,4 @@ class $modify(CCKeyboardDispatcher) {
 $execute {
 	if (Mod::get()->getSavedValue<float>("previous_speed"))
 		prevSpeed = Mod::get()->getSavedValue<float>("previous_speed");
-	
-	for (std::size_t i = 0; i < 15; i++) {
-		safeMode::patches[i] = Mod::get()->patch(reinterpret_cast<void*>(base::get() + std::get<0>(safeMode::codes[i])),
-		std::get<1>(safeMode::codes[i])).unwrap();
-		safeMode::patches[i]->disable();
-	}
 }
