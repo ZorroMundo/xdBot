@@ -670,16 +670,12 @@ class $modify(GJBaseGameLayer) {
 			if (buttonsMenu != nullptr) {
 			if (advanceFrameBtn != nullptr) {
 				if (Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
-					try {
+					
 						advanceFrameBtn->removeFromParent();
 						advanceFrameBtn = nullptr;
-
-					} catch (const std::exception& e) {
-					log::debug("wtfffffjdhddu? - {}",e);
 				}
-
-				} else addButton("advance_frame_btn");
-			}
+			} else if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper"))
+				addButton("advance_frame_btn");
 			} else if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
 				buttonsMenu = CCMenu::create();
 					buttonsMenu->setPosition({0,0});
