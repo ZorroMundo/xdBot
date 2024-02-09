@@ -538,7 +538,7 @@ class $modify(PauseLayer) {
 
 };
 
-data& c = nullptr;
+data& c;
 
 void addLabel(const char* text) {
 	auto label = CCLabelBMFont::create(text, "chatFont.fnt");
