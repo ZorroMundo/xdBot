@@ -678,7 +678,8 @@ class $modify(GJBaseGameLayer) {
 				} else addButton("advance_frame_btn");
 			}
 			} else if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
-				buttonsMenu = CCMenu::create()->setPosition({0,0});
+				buttonsMenu = CCMenu::create();
+					buttonsMenu->setPosition({0,0});
 				PlayLayer::get()->addChild(buttonsMenu);
 				addButton("advance_frame_btn");
 			}
