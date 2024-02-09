@@ -552,7 +552,7 @@ void addButton(const char* id) {
 	spr->setScale(0.8f);
     	auto btn = CCMenuItemSpriteExtra::create(
         	spr,
-        	this,
+        	PlayLayer::get(),
 	nullptr;
     	);
 	auto winSize = CCDirector::sharedDirector()->getWinSize();
