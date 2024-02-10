@@ -16,10 +16,17 @@ float leftOver = 0.f; // For CCScheduler
 double prevSpeed = 1.0f;
 
 int fixedFps = 240;
-int offset = 0x328;
 
 #ifdef GEODE_IS_ANDROID
-	offset = 0x320;
+	int offset = 0x320;
+#else
+	int offset = 0x328;
+#endif
+
+#ifdef GEODE_IS_ANDROID
+	bool isAndroid = true;
+#else
+	bool isAndroid = false;
 #endif
 
 bool safeModeEnabled = false;
@@ -1104,8 +1111,6 @@ $execute {
 
 	if (!isAndroid)
 		Mod::get()->hook(reinterpret_cast<void *>(base::get() + 0x1BD240), &GJBaseGameLayerProcessCommands, "GJBaseGameLayer::processCommands", tulip::hook::TulipConvention::Thiscall);
-	else 
-		slash = "/";
 
 	for (std::size_t i = 0; i < 15; i++) {
 		safeMode::patches[i] = Mod::get()->patch(reinterpret_cast<void*>(base::get() + std::get<0>(safeMode::codes[i])),
