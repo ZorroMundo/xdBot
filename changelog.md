@@ -1,3 +1,9 @@
+# v1.4.0
+
+ * Added android support.
+ * Changed the menu button sprite.
+ * Updated the about (filler changelog).
+
 # v1.3.10
  
  * Fixed macros working different when loaded.
