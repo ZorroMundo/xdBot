@@ -3,6 +3,12 @@
 #include <codecvt>
 #include <string>
 
+std::string slash = "\\";
+
+#ifdef GEODE_IS_ANDROID
+	slash = "/";
+#endif
+
 #define CCPOINT_CREATE(__X__,__Y__) cocos2d::CCPointMake((float)(__X__), (float)(__Y__))
 
 using namespace geode::prelude;
@@ -24,21 +30,23 @@ public:
 
     void handleDelete(CCObject* btn) {
 	    std::string path = Mod::get()->getSaveDir().string()
-        +"/"+static_cast<CCMenuItemSpriteExtra*>(btn)->getID() + ".xd";
+        +slash+static_cast<CCMenuItemSpriteExtra*>(btn)->getID() + ".xd";
 
         std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
         std::wstring wideString = converter.from_bytes(path);
 	    std::locale utf8_locale(std::locale(), new std::codecvt_utf8<wchar_t>);
 
-       if (std::remove(path.c_str()) != 0) {
-         FLAlertLayer::create(
+        try {
+        std::filesystem::remove(wideString);
+        } catch (const std::filesystem::filesystem_error& e) {
+            FLAlertLayer::create(
     		"Delete Macro",   
     		"There was an <cr>error</c> deleting this macro.",  
     		"OK"      
 		    )->show();
             return;
-    }
-
+        }
+            
         if (this->getParent()->getParent()->getChildren()->count() == 1)  {
             CCLabelBMFont* noMacroLbl = CCLabelBMFont::create("No macros.", "bigFont.fnt");
             noMacroLbl->setAlignment(CCTextAlignment::kCCTextAlignmentCenter);
@@ -123,7 +131,7 @@ public:
             return;
             }
             std::ofstream copiedMacro(Mod::get()->getSaveDir().string()
-            + "/" + path.filename().string(), std::ios::binary);
+            + slash + path.filename().string(), std::ios::binary);
 
             if (!copiedMacro.is_open()) {
                 FLAlertLayer::create(
