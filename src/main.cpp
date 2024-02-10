@@ -168,7 +168,7 @@ class RecordLayer : public geode::Popup<std::string const&> {
 protected:
     bool setup(std::string const& value) override {
         auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
-		auto versionLabel = CCLabelBMFont::create("xdBot v1.3.10 - made by Zilko", "chatFont.fnt");
+		auto versionLabel = CCLabelBMFont::create("xdBot v1.4.0 - made by Zilko", "chatFont.fnt");
 		versionLabel->setOpacity(60);
 		versionLabel->setAnchorPoint(ccp(0.0f,0.5f));
 		versionLabel->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(3, 6));
@@ -553,6 +553,7 @@ void clearState(bool safeMode) {
 	frameLabel = nullptr;
 	stateLabel = nullptr;
 
+	androidAction = nullptr;
 	leftOver = 0.f;
 
 	if (PlayLayer::get()) {
@@ -567,7 +568,7 @@ void clearState(bool safeMode) {
 	}
 	
 	Mod::get()->setSettingValue("frame_stepper", false);
-	if (!safeMode) {
+	if (!safeMode && !isAndroid) {
 		safeModeEnabled = false;
 		safeMode::updateSafeMode();
 	}
@@ -781,7 +782,7 @@ class $modify(GJBaseGameLayer) {
 			}
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
-		} else {
+		} else if (recorder.state == state::playing) {
 			if (androidAction != nullptr) {
 			if (!androidAction->posOnly && androidAction->p1.xPos != 0) {
 						if (!areEqual(this->m_player1->getPositionX(), androidAction->p1.xPos) ||
@@ -873,6 +874,16 @@ class $modify(GJBaseGameLayer) {
 			if (stateLabel != nullptr) {
 				stateLabel->removeFromParent();
 				stateLabel = nullptr;
+			}
+		}
+
+		if (recorder.state != state::recording && isAndroid) {
+			if (buttonsMenu != nullptr) {
+				buttonsMenu->removeFromParent();
+				buttonsMenu = nullptr;
+				disableFSBtn = nullptr;
+				advanceFrameBtn = nullptr;
+				speedhackBtn = nullptr;
 			}
 		}
 		
