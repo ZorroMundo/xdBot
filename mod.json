@@ -23,18 +23,6 @@
 			"type": "bool",
 			"default": false
 		},
-		"vanilla": {
-			"name": "Vanilla",
-			"description": "Stops recording the player's position during an input. Macro might be less accurate.\nModerately decreases macro size.",
-			"type": "bool",
-			"default": false
-		},
-		"frame_fix": {
-			"name": "Frame Fixes",
-			"description": "Improves accuracy by recording the player's position every frame to make sure the macro doesn't break.\nHeavily increases macro size.",
-			"type": "bool",
-			"default": false
-		},
 		"auto_enable_play": {
 			"name": "Auto-Enable Play",
 			"description": "Toggles playing the macro automatically when you finish recording a level.",
@@ -61,19 +49,31 @@
 		},
 		"disable_frame_stepper": {
 			"name": "Disable FS Shortcut",
-			"description": "Disables frame stepper key shortcut.",
+			"description": "Disables the frame stepper shortcut.",
 			"type": "bool",
 			"default": false
 		},
 		"disable_speedhack": {
 			"name": "Disable SH Shortcut",
-			"description": "Disables speedhack key shortcut.",
+			"description": "Disables the speedhack shortcut.",
+			"type": "bool",
+			"default": false
+		},
+		"vanilla": {
+			"name": "Vanilla",
+			"description": "<cr>WINDOWS ONLY</c>\nStops recording the player's position during an input. Macro might be less accurate.\nModerately decreases macro size.",
+			"type": "bool",
+			"default": false
+		},
+		"frame_fix": {
+			"name": "Frame Fixes",
+			"description": "<cr>WINDOWS ONLY</c>\nImproves accuracy by recording the player's position every frame to make sure the macro doesn't break.\nHeavily increases macro size.",
 			"type": "bool",
 			"default": false
 		},
 		"override_macro_mode": {
 			"name": "Override Macro Mode",
-			"description": "Ignores the mode the macro was originally recorded in and uses the current mode.",
+			"description": "<cr>WINDOWS ONLY</c>\nIgnores the mode the macro was originally recorded in and uses the current mode.",
 			"type": "bool",
 			"default": false
 		}
