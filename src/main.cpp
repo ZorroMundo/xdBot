@@ -154,7 +154,7 @@ public:
 		else
 			realp1 = player1;
 		
-    	macro.push_back({player1, frame, button, holding, false, p1Data, p2Data});
+    	macro.push_back({realp1, frame, button, holding, false, p1Data, p2Data});
 	}
 
 };
@@ -170,8 +170,8 @@ protected:
         auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
 		auto versionLabel = CCLabelBMFont::create("xdBot v1.3.10 - made by Zilko", "chatFont.fnt");
 		versionLabel->setOpacity(60);
-		versionLabel->setAnchorPoint(CCPOINT_CREATE(0.0f,0.5f));
-		versionLabel->setPosition(winSize/2 + CCPOINT_CREATE(-winSize.width/2, -winSize.height/2) + CCPOINT_CREATE(3, 6));
+		versionLabel->setAnchorPoint(ccp(0.0f,0.5f));
+		versionLabel->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(3, 6));
 		versionLabel->setScale(0.5f);
 		this->addChild(versionLabel);
 		this->setTitle("xdBot");
@@ -182,12 +182,12 @@ protected:
  		auto checkOffSprite = CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png");
    		auto checkOnSprite = CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png");
 
-		CCPoint topLeftCorner = winSize/2.f-CCPOINT_CREATE(m_size.width/2.f,-m_size.height/2.f);
+		CCPoint topLeftCorner = winSize/2.f-ccp(m_size.width/2.f,-m_size.height/2.f);
 
 		auto label = CCLabelBMFont::create("Record", "bigFont.fnt"); 
     	label->setAnchorPoint({0, 0.5});
     	label->setScale(0.7f);
-    	label->setPosition(topLeftCorner + CCPOINT_CREATE(168, -60));
+    	label->setPosition(topLeftCorner + ccp(168, -60));
     	m_mainLayer->addChild(label);
 
     	recording = CCMenuItemToggler::create(checkOffSprite,
@@ -195,7 +195,7 @@ protected:
 		this,
 		menu_selector(RecordLayer::toggleRecord));
 
-    	recording->setPosition(label->getPosition() + CCPOINT_CREATE(105,0));
+    	recording->setPosition(label->getPosition() + ccp(105,0));
     	recording->setScale(0.85f);
     	recording->toggle(recorder.state == state::recording); 
     	menu->addChild(recording);
@@ -207,9 +207,10 @@ protected:
         	this,
         	menu_selector(RecordLayer::openSettingsMenu)
     	);
-    	btn->setPosition(winSize/2.f-CCPOINT_CREATE(m_size.width/2.f,m_size.height/2.f) + CCPOINT_CREATE(325, 20));
+    	btn->setPosition(winSize/2.f-ccp(m_size.width/2.f,m_size.height/2.f) + ccp(325, 20));
     	menu->addChild(btn);
 
+		if (!isAndroid) {
 		spr = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
     	spr->setScale(0.65f);
     	btn = CCMenuItemSpriteExtra::create(
@@ -217,12 +218,13 @@ protected:
         	this,
         	menu_selector(RecordLayer::keyInfo)
     	);
-    	btn->setPosition(topLeftCorner + CCPOINT_CREATE(290, -10));
+    	btn->setPosition(topLeftCorner + ccp(290, -10));
     	menu->addChild(btn);
+		}
 
     	label = CCLabelBMFont::create("Play", "bigFont.fnt");
     	label->setScale(0.7f);
-    	label->setPosition(topLeftCorner + CCPOINT_CREATE(198, -90)); 
+    	label->setPosition(topLeftCorner + ccp(198, -90)); 
     	label->setAnchorPoint({0, 0.5});
     	m_mainLayer->addChild(label);
 
@@ -230,7 +232,7 @@ protected:
 	 	this,
 	 	menu_selector(RecordLayer::togglePlay));
 
-    	playing->setPosition(label->getPosition() + CCPOINT_CREATE(75,0)); 
+    	playing->setPosition(label->getPosition() + ccp(75,0)); 
     	playing->setScale(0.85f);
     	playing->toggle(recorder.state == state::playing); 
     	menu->addChild(playing);
@@ -242,7 +244,7 @@ protected:
    		this,
    		menu_selector(saveMacroPopup::openSaveMacro));
 
-    	btn->setPosition(topLeftCorner + CCPOINT_CREATE(65, -160)); 
+    	btn->setPosition(topLeftCorner + ccp(65, -160)); 
     	menu->addChild(btn);
 
 		btnSprite = ButtonSprite::create("Load");
@@ -252,7 +254,7 @@ protected:
 		this,
 		menu_selector(loadMacroPopup::openLoadMenu));
 
-    	btn->setPosition(topLeftCorner + CCPOINT_CREATE(144, -160));
+    	btn->setPosition(topLeftCorner + ccp(144, -160));
     	menu->addChild(btn);
 
   		btnSprite = ButtonSprite::create("Clear");
@@ -262,12 +264,12 @@ protected:
 		this,
 		menu_selector(RecordLayer::clearMacro));
 
-    	btn->setPosition(topLeftCorner + CCPOINT_CREATE(228, -160));
+    	btn->setPosition(topLeftCorner + ccp(228, -160));
     	menu->addChild(btn);
 
 		infoMacro = CCLabelBMFont::create("", "chatFont.fnt");
     	infoMacro->setAnchorPoint({0, 1});
-    	infoMacro->setPosition(topLeftCorner + CCPOINT_CREATE(21, -45));
+    	infoMacro->setPosition(topLeftCorner + ccp(21, -45));
 		updateInfo();
     	m_mainLayer->addChild(infoMacro);
 
@@ -542,8 +544,17 @@ void clearState(bool safeMode) {
     FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
 	channel->setPitch(1);
 	recorder.state = state::off;
-	
+
+	buttonsMenu = nullptr;
+	advanceFrameBtn = nullptr;
+	disableFSBtn = nullptr;
+	speedhackBtn = nullptr;
+
+	frameLabel = nullptr;
+	stateLabel = nullptr;
+
 	leftOver = 0.f;
+
 	if (PlayLayer::get()) {
 		CCArray* children = PlayLayer::get()->getChildren();
 		CCObject* child;
@@ -554,8 +565,7 @@ void clearState(bool safeMode) {
    			}
 		}
 	}
-	frameLabel = nullptr;
-	stateLabel = nullptr;
+	
 	Mod::get()->setSettingValue("frame_stepper", false);
 	if (!safeMode) {
 		safeModeEnabled = false;
@@ -569,8 +579,8 @@ class $modify(PauseLayer) {
 	void customSetup() {
 		PauseLayer::customSetup();
 		auto winSize = CCDirector::sharedDirector()->getWinSize();
-        auto sprite = CCSprite::createWithSpriteFrameName("GJ_stopEditorBtn_001.png");
-        sprite->setScale(0.75f);
+        auto sprite = CCSprite::createWithSpriteFrameName("GJ_playBtn2_001.png");
+		sprite->setScale(0.35f);
 
         auto btn = CCMenuItemSpriteExtra::create(sprite,
 		this,
@@ -615,26 +625,113 @@ class $modify(PauseLayer) {
 
 };
 
+class mobileButtons {
+public:
+	void frameAdvance(CCObject*) {
+	if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
+		if (Mod::get()->getSettingValue<bool>("frame_stepper")) stepFrame = true;
+		else {
+			Mod::get()->setSettingValue("frame_stepper", true);
+			if (disableFSBtn == nullptr)  {
+				auto winSize = CCDirector::sharedDirector()->getWinSize();
+				CCSprite* spr = nullptr;
+				CCMenuItemSpriteExtra* btn = nullptr;
+				spr = CCSprite::createWithSpriteFrameName("GJ_deleteSongBtn_001.png");
+				spr->setOpacity(102);
+        		spr->setScale(0.65f);
+				btn = CCMenuItemSpriteExtra::create(
+        		spr,
+        		PlayLayer::get(),
+				menu_selector(mobileButtons::disableFrameStepper)
+    			);
+				btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(45, 35));
+				btn->setID("disable_fs_btn");
+				buttonsMenu->addChild(btn);
+				disableFSBtn = btn;
+			}
+		} 
+	}
+}
+
+void toggleSpeedhack(CCObject*) {
+	if (!Mod::get()->getSettingValue<bool>("disable_speedhack")) {
+		if (prevSpeed != 1 && Mod::get()->getSettingValue<double>("speedhack") == 1)
+			Mod::get()->setSettingValue("speedhack", prevSpeed);
+		else {
+			prevSpeed = Mod::get()->getSettingValue<double>("speedhack");
+			Mod::get()->setSavedValue<float>("previous_speed", prevSpeed);
+			Mod::get()->setSettingValue("speedhack", 1.0);
+		}
+	}
+}
+
+void disableFrameStepper(CCObject*) {
+	if (Mod::get()->getSettingValue<bool>("frame_stepper")) {
+		recorder.syncMusic();
+		Mod::get()->setSettingValue("frame_stepper", false);
+		if (disableFSBtn != nullptr) {
+			disableFSBtn->removeFromParent();
+			disableFSBtn = nullptr;
+		}
+	}
+}
+
+};
+
 void addButton(const char* id) {
+	auto winSize = CCDirector::sharedDirector()->getWinSize();
 	CCSprite* spr = nullptr;
+	CCMenuItemSpriteExtra* btn = nullptr;
 	if (id == "advance_frame_btn") {
-		spr = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
-	} else {
-		spr = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
-    	}
-	spr->setScale(0.8f);
-    	auto btn = CCMenuItemSpriteExtra::create(
+		spr = CCSprite::createWithSpriteFrameName("GJ_plainBtn_001.png");
+        spr->setScale(0.65f);
+		spr->setOpacity(102);
+        auto icon = CCSprite::createWithSpriteFrameName("GJ_arrow_02_001.png");
+        icon->setPosition(spr->getContentSize() / 2 + ccp(2.5f,0));
+        icon->setScaleY(0.7f);
+        icon->setScaleX(-0.7f);
+		icon->setOpacity(102);
+        spr->addChild(icon);
+		btn = CCMenuItemSpriteExtra::create(
         	spr,
         	PlayLayer::get(),
-	nullptr
+			menu_selector(mobileButtons::frameAdvance)
     	);
-	advanceFrameBtn = btn;
-	auto winSize = CCDirector::sharedDirector()->getWinSize();
-	btn->setPosition(winSize/2 + CCPOINT_CREATE(-winSize.width/2, -winSize.height/2) + CCPOINT_CREATE(6, 30));
-	
-	btn->setScale(0.7f);
-	buttonsMenu->addChild(btn);
-	
+		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(15, 35));
+		btn->setID(id);
+		buttonsMenu->addChild(btn);
+		advanceFrameBtn = btn;
+	} else if (id == "speedhack_btn") {
+		spr = CCSprite::createWithSpriteFrameName("GJ_plainBtn_001.png");
+        spr->setScale(0.65f);
+		spr->setOpacity(102);
+        auto icon = CCSprite::createWithSpriteFrameName("GJ_timeIcon_001.png");
+        icon->setPosition(spr->getContentSize() / 2);
+		icon->setOpacity(102);
+        spr->addChild(icon);
+		btn = CCMenuItemSpriteExtra::create(
+        	spr,
+        	PlayLayer::get(),
+			menu_selector(mobileButtons::toggleSpeedhack)
+    	);
+		btn->setPosition(winSize/2 + ccp(winSize.width/2, -winSize.height/2) + ccp(-15, 35));
+		btn->setID(id);
+		buttonsMenu->addChild(btn);
+		speedhackBtn = btn;
+	} else if (id == "disable_fs_btn") {
+		spr = CCSprite::createWithSpriteFrameName("GJ_deleteSongBtn_001.png");
+		spr->setOpacity(102);
+        spr->setScale(0.65f);
+		btn = CCMenuItemSpriteExtra::create(
+        	spr,
+        	PlayLayer::get(),
+			menu_selector(mobileButtons::disableFrameStepper)
+    	);
+		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(45, 35));
+		btn->setID(id);
+		buttonsMenu->addChild(btn);
+		disableFSBtn = btn;
+	}
 }
 
 void addLabel(const char* text) {
@@ -644,12 +741,12 @@ void addLabel(const char* text) {
 	if (text != "Frame: 0") {
 		stateLabel = label;
 		label->setID("stateLabel");
-		label->setPosition(winSize/2 + CCPOINT_CREATE(winSize.width/2, -winSize.height/2) + CCPOINT_CREATE(-31, 12));
+		label->setPosition(winSize/2 + ccp(winSize.width/2, -winSize.height/2) + ccp(-31, 12));
 	} else {
-		label->setAnchorPoint(CCPOINT_CREATE(0.0f,0.5f));
+		label->setAnchorPoint(ccp(0.0f,0.5f));
 		label->setID("frameLabel");
 		frameLabel = label;
-		label->setPosition(winSize/2 + CCPOINT_CREATE(-winSize.width/2, -winSize.height/2) + CCPOINT_CREATE(6, 12));
+		label->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(6, 12));
 	}
 	PlayLayer::get()->addChild(label);
 }
@@ -780,21 +877,51 @@ class $modify(GJBaseGameLayer) {
 		}
 		
 		if (recorder.state == state::recording) {
-
+			if (isAndroid) {
 			if (buttonsMenu != nullptr) {
 			if (advanceFrameBtn != nullptr) {
 				if (Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
-					
-						advanceFrameBtn->removeFromParent();
-						advanceFrameBtn = nullptr;
+					if (disableFSBtn != nullptr) {
+						disableFSBtn->removeFromParent();
+						disableFSBtn = nullptr;
+					}
+					advanceFrameBtn->removeFromParent();
+					advanceFrameBtn = nullptr;
 				}
-			} else if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper"))
-				addButton("advance_frame_btn");
 			} else if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
+				addButton("advance_frame_btn");
+				if (Mod::get()->getSettingValue<bool>("frame_stepper")){
+					addButton("disable_fs_btn");
+				}
+			}
+
+			if (speedhackBtn != nullptr) {
+				if (Mod::get()->getSettingValue<bool>("disable_speedhack")) {
+					speedhackBtn->removeFromParent();
+					speedhackBtn = nullptr;
+				}
+			} else if (!Mod::get()->getSettingValue<bool>("disable_speedhack"))
+				addButton("speedhack_btn");
+
+			} else {
+			if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
 				buttonsMenu = CCMenu::create();
-					buttonsMenu->setPosition({0,0});
+				buttonsMenu->setPosition({0,0});
 				PlayLayer::get()->addChild(buttonsMenu);
 				addButton("advance_frame_btn");
+				if (Mod::get()->getSettingValue<bool>("frame_stepper")){
+					addButton("disable_fs_btn");
+				}
+			}
+			if (!Mod::get()->getSettingValue<bool>("disable_speedhack")) {
+				if (buttonsMenu == nullptr) {
+					buttonsMenu = CCMenu::create();
+					buttonsMenu->setPosition({0,0});
+					PlayLayer::get()->addChild(buttonsMenu);
+				}
+				addButton("speedhack_btn");
+			}
+			}
 			}
 
 			if (stateLabel != nullptr) {
@@ -959,6 +1086,7 @@ class $modify(PlayLayer) {
 		}
 		
 		playerHolding = false;
+		leftOver = 0.f;
 
 		if (safeModeEnabled && !isAndroid) {
 			safeModeEnabled = false;
@@ -967,7 +1095,6 @@ class $modify(PlayLayer) {
 		
 
 		if (recorder.state == state::playing) {
-			leftOver = 0.f;
 			recorder.currentAction = 0;
 			FMOD::ChannelGroup* channel;
         	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
@@ -1089,7 +1216,11 @@ class $modify(CCKeyboardDispatcher) {
 		if (key == cocos2d::enumKeyCodes::KEY_V && hold && !p && recorder.state == state::recording) {
 			if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
 				if (Mod::get()->getSettingValue<bool>("frame_stepper")) stepFrame = true;
-				else Mod::get()->setSettingValue("frame_stepper", true);
+				else {
+					Mod::get()->setSettingValue("frame_stepper", true);
+					if (disableFSBtn == nullptr && isAndroid) 
+						addButton("disable_fs_btn");
+				} 
 			}
 		}
 
@@ -1097,6 +1228,10 @@ class $modify(CCKeyboardDispatcher) {
 			if (Mod::get()->getSettingValue<bool>("frame_stepper")) {
 				recorder.syncMusic();
 				Mod::get()->setSettingValue("frame_stepper", false);
+				if (disableFSBtn != nullptr) {
+					disableFSBtn->removeFromParent();
+					disableFSBtn = nullptr;
+				}
 			}
 		}
 		return CCKeyboardDispatcher::dispatchKeyboardMSG(key,hold,p);
@@ -1108,6 +1243,7 @@ $execute {
 		prevSpeed = Mod::get()->getSavedValue<float>("previous_speed");
 	else
 		prevSpeed = 0.5f;
+
 
 	if (!isAndroid)
 		Mod::get()->hook(reinterpret_cast<void *>(base::get() + 0x1BD240), &GJBaseGameLayerProcessCommands, "GJBaseGameLayer::processCommands", tulip::hook::TulipConvention::Thiscall);
