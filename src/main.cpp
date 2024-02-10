@@ -12,15 +12,31 @@
 #include "fileSystem.hpp"
 
 float leftOver = 0.f; // For CCScheduler
+
+double prevSpeed = 1.0f;
+
 int fixedFps = 240;
+int offset = 0x328;
+
+#ifdef GEODE_IS_ANDROID
+	offset = 0x320;
+#endif
+
+bool isAndroid = false;
+
+#ifdef GEODE_IS_ANDROID
+	isAndroid = true;
+#endif
+
+bool safeModeEnabled = false;
 bool restart = false;
 bool stepFrame = false;
-double prevSpeed = 1.0f;
-bool safeModeEnabled = false;
 bool playerHolding = false;
 bool lastHold = false;
 bool shouldPlay = false;
 bool shouldPlay2 = false;
+
+data* androidAction = nullptr;
 
 int playerEnums[2][3] = {
     {cocos2d::enumKeyCodes::KEY_ArrowUp, cocos2d::enumKeyCodes::KEY_ArrowLeft, cocos2d::enumKeyCodes::KEY_ArrowRight}, 
@@ -41,6 +57,53 @@ CCMenuItemSpriteExtra* speedhackBtn = nullptr;
 
 using namespace geode::prelude;
 
+namespace safeMode {
+using opcode = std::pair<unsigned long, std::vector<uint8_t>>;
+
+	inline const std::array<opcode, 15> codes{
+		opcode{ 0x2DDC7E, { 0x0F, 0x84, 0xCA, 0x00, 0x00, 0x00 } },
+		{ 0x2DDD6A, { 0x0F, 0x84, 0xEA, 0x01, 0x00, 0x00 } },
+		{ 0x2DDD70, { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 } },
+		{ 0x2DDD77, { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 } },
+		{ 0x2DDEE5, { 0x90 } },
+		{ 0x2DDF6E, { 0x0F, 0x84, 0xC2, 0x02, 0x00, 0x00 } },
+
+		{ 0x2E6BDE, { 0x90, 0xE9, 0xAD, 0x00, 0x00, 0x00 } },
+		{ 0x2E6B32, { 0xEB, 0x0D } },
+		{ 0x2E69F4, { 0x0F, 0x4C, 0xC1 } },
+		{ 0x2E6993, { 0x90, 0xE9, 0x85, 0x01, 0x00, 0x00 } },
+
+		{ 0x2EACD0, { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 } },
+		{ 0x2EACD6, { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 } }, 
+		{ 0x2EACF7, { 0x90 } },
+
+		{ 0x2EA81F, { 0x6A, 0x00 } },
+		{ 0x2EA83D, { 0x90 } }
+	};
+	inline std::array<geode::Patch*, 15> patches;
+
+	void updateSafeMode() {
+		for (auto& patch : patches) {
+		if (safeModeEnabled && !isAndroid) {
+			if (!patch->isEnabled()) {
+				try {
+					patch->enable();
+				} catch(const std::exception& e) {
+					log::debug("wtf? - {}", e);
+				}
+			}
+		} else {
+			if (patch->isEnabled()) {
+				try {
+					patch->disable();
+				} catch(const std::exception& e) {
+					log::debug("wtf 2? - {}", e);
+				}
+			}
+		}
+	}
+	}
+}
 
 struct playerData {
 	float xPos;
@@ -74,7 +137,7 @@ public:
    	std::vector<data> macro;
 
 	int currentFrame() {
-		return static_cast<int>((*(double*)(((char*)PlayLayer::get()) + 0x320)) * fixedFps);
+		return static_cast<int>((*(double*)(((char*)PlayLayer::get()) + offset)) * fixedFps);
 	}
 	void syncMusic() {
 		FMODAudioEngine::sharedEngine()->setMusicTimeMS(
@@ -84,8 +147,13 @@ public:
 		);
 	}
 	void recordAction(bool holding, int button, bool player1, int frame, GJBaseGameLayer* bgl, playerData p1Data, playerData p2Data) {
-    	bool realp1 = (GameManager::get()->getGameVariable("0010") && !bgl->m_levelSettings->m_platformerMode) ? !player1 : player1;
-		macro.push_back({realp1, frame, button, holding, false, p1Data, p2Data});
+		bool realp1;
+		if (isAndroid)
+			realp1 = (GameManager::get()->getGameVariable("0010") && !bgl->m_levelSettings->m_platformerMode) ? !player1 : player1;
+		else
+			realp1 = player1;
+		
+    	macro.push_back({player1, frame, button, holding, false, p1Data, p2Data});
 	}
 
 };
@@ -99,7 +167,7 @@ class RecordLayer : public geode::Popup<std::string const&> {
 protected:
     bool setup(std::string const& value) override {
         auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
-		auto versionLabel = CCLabelBMFont::create("xdBot Mobile v1.0.0 - made by Zilko", "chatFont.fnt");
+		auto versionLabel = CCLabelBMFont::create("xdBot v1.3.10 - made by Zilko", "chatFont.fnt");
 		versionLabel->setOpacity(60);
 		versionLabel->setAnchorPoint(CCPOINT_CREATE(0.0f,0.5f));
 		versionLabel->setPosition(winSize/2 + CCPOINT_CREATE(-winSize.width/2, -winSize.height/2) + CCPOINT_CREATE(3, 6));
@@ -311,7 +379,7 @@ void saveMacroPopup::openSaveMacro(CCObject*) {
 }
 
 void saveMacroPopup::saveMacro(CCObject*) {
-   if (std::string(macroNameInput->getString()).length() < 1) {
+  if (std::string(macroNameInput->getString()).length() < 1) {
 		FLAlertLayer::create(
     	"Save Macro",   
     	"Macro name can't be <cl>empty</c>.",  
@@ -321,7 +389,7 @@ void saveMacroPopup::saveMacro(CCObject*) {
 	}
 
 	std::string savePath = Mod::get()->getSaveDir().string()
-     +"/"+std::string(macroNameInput->getString()) + ".xd";
+     +slash+std::string(macroNameInput->getString()) + ".xd";
 
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
     std::wstring wideString = converter.from_bytes(savePath);
@@ -342,7 +410,6 @@ void saveMacroPopup::saveMacro(CCObject*) {
 			"|" << action.p2.rotation << "|" << action.p2.xSpeed <<
 			"|" << action.p2.ySpeed  << "\n";
 		}
-
 		file.close();
 		CCArray* children = CCDirector::sharedDirector()->getRunningScene()->getChildren();
 		CCObject* child;
@@ -369,7 +436,7 @@ void saveMacroPopup::saveMacro(CCObject*) {
 
 void macroCell::handleLoad(CCObject* btn) {
 	std::string loadPath = Mod::get()->getSaveDir().string()
-    +"/"+static_cast<CCMenuItemSpriteExtra*>(btn)->getID() + ".xd";
+    +slash+static_cast<CCMenuItemSpriteExtra*>(btn)->getID() + ".xd";
 	recorder.macro.clear();
 
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
@@ -469,14 +536,12 @@ void macroCell::loadMacro(CCObject* button) {
 	} else handleLoad(button);
 }
 
-void clearState() {
+void clearState(bool safeMode) {
 	FMOD::ChannelGroup* channel;
     FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
 	channel->setPitch(1);
 	recorder.state = state::off;
-	advanceFrameBtn = nullptr;
-	speedhackBtn = nullptr;
-	buttonsMenu = nullptr;
+	
 	leftOver = 0.f;
 	if (PlayLayer::get()) {
 		CCArray* children = PlayLayer::get()->getChildren();
@@ -491,6 +556,10 @@ void clearState() {
 	frameLabel = nullptr;
 	stateLabel = nullptr;
 	Mod::get()->setSettingValue("frame_stepper", false);
+	if (!safeMode) {
+		safeModeEnabled = false;
+		safeMode::updateSafeMode();
+	}
 }
 
 	// ---------------- Hooks ---------------- 539//
@@ -513,12 +582,12 @@ class $modify(PauseLayer) {
 
 	void onQuit(CCObject* sender) {
 		PauseLayer::onQuit(sender);
-		clearState();
+		clearState(false);
 	}
 
 	void goEdit() {
 		PauseLayer::goEdit();
-		clearState();
+		clearState(false);
 	}
 
 	void onResume(CCObject* sender) {
@@ -544,6 +613,7 @@ class $modify(PauseLayer) {
 	}
 
 };
+
 void addButton(const char* id) {
 	CCSprite* spr = nullptr;
 	if (id == "advance_frame_btn") {
@@ -565,6 +635,7 @@ void addButton(const char* id) {
 	buttonsMenu->addChild(btn);
 	
 }
+
 void addLabel(const char* text) {
 	auto label = CCLabelBMFont::create(text, "chatFont.fnt");
 	auto winSize = CCDirector::sharedDirector()->getWinSize();
@@ -581,11 +652,13 @@ void addLabel(const char* text) {
 	}
 	PlayLayer::get()->addChild(label);
 }
-data* xd = nullptr;
+
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
-		if (recorder.state != state::off) {
-		if (recorder.state == state::recording) {
+		GJBaseGameLayer::handleButton(holding,button,player1);
+		
+		if (isAndroid) {
+			if (recorder.state == state::recording) {
 			playerData p1;
 			playerData p2;
 				p1 = {
@@ -611,22 +684,60 @@ class $modify(GJBaseGameLayer) {
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else {
-			if (xd != nullptr) {
-			if (!xd->posOnly && xd->p1.xPos != 0) {
-						if (!areEqual(this->m_player1->getPositionX(), xd->p1.xPos) ||
-						!areEqual(this->m_player1->getPositionY(), xd->p1.yPos))
-								this->m_player1->setPosition(cocos2d::CCPoint(xd->p1.xPos, xd->p1.yPos));
+			if (androidAction != nullptr) {
+			if (!androidAction->posOnly && androidAction->p1.xPos != 0) {
+						if (!areEqual(this->m_player1->getPositionX(), androidAction->p1.xPos) ||
+						!areEqual(this->m_player1->getPositionY(), androidAction->p1.yPos))
+								this->m_player1->setPosition(cocos2d::CCPoint(androidAction->p1.xPos, androidAction->p1.yPos));
 					
-						if (xd->p2.xPos != 0 && this->m_player2 != nullptr) {
-							if (!areEqual(this->m_player2->getPositionX(), xd->p2.xPos) ||
-							!areEqual(this->m_player2->getPositionY(), xd->p2.yPos))
-								this->m_player2->setPosition(cocos2d::CCPoint(xd->p2.xPos, xd->p2.yPos));
+						if (androidAction->p2.xPos != 0 && this->m_player2 != nullptr) {
+							if (!areEqual(this->m_player2->getPositionX(), androidAction->p2.xPos) ||
+							!areEqual(this->m_player2->getPositionY(), androidAction->p2.yPos))
+								this->m_player2->setPosition(cocos2d::CCPoint(androidAction->p2.xPos, androidAction->p2.yPos));
 						}
 				}
 		}
 		}
-	}
-		GJBaseGameLayer::handleButton(holding,button,player1);
+	} else if (recorder.state == state::recording) {
+			playerData p1;
+			playerData p2;
+			if (!Mod::get()->getSettingValue<bool>("vanilla") || Mod::get()->getSettingValue<bool>("frame_fix")) {
+				if (!Mod::get()->getSettingValue<bool>("frame_fix")) playerHolding = holding;
+				if (!recorder.macro.empty()) {
+					try {
+						if (recorder.macro.back().frame == recorder.currentFrame() && recorder.macro.back().posOnly) {
+							recorder.macro.pop_back();
+						}
+					} catch (const std::exception& e) {
+						log::debug("wtfffff amaze real? - {}",e);
+					}
+				}
+				p1 = {
+				this->m_player1->getPositionX(),
+				this->m_player1->getPositionY(),
+				this->m_player1->m_isUpsideDown,
+				-80085,
+				-80085,
+				-80085
+			};
+			if (this->m_player2 != nullptr) {
+				p2 = {
+				this->m_player2->getPositionX(),
+				this->m_player2->getPositionY(),
+				this->m_player2->m_isUpsideDown,
+				-80085,
+				-80085,
+				-80085
+				};
+			} else {
+				p2.xPos = 0;
+			}
+			} else {
+				p1.xPos = 0;
+			}
+			int frame = recorder.currentFrame(); 
+			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
+		}
 	}
 
 	int getPlayer1(int p1, GJBaseGameLayer* bgl) {
@@ -668,6 +779,7 @@ class $modify(GJBaseGameLayer) {
 		}
 		
 		if (recorder.state == state::recording) {
+
 			if (buttonsMenu != nullptr) {
 			if (advanceFrameBtn != nullptr) {
 				if (Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
@@ -683,6 +795,7 @@ class $modify(GJBaseGameLayer) {
 				PlayLayer::get()->addChild(buttonsMenu);
 				addButton("advance_frame_btn");
 			}
+
 			if (stateLabel != nullptr) {
 				if (stateLabel->getString() != "Recording" && Mod::get()->getSettingValue<bool>("show_recording_label"))
 					stateLabel->setString("Recording");
@@ -702,7 +815,7 @@ class $modify(GJBaseGameLayer) {
 			} else GJBaseGameLayer::update(dt);
 		} else GJBaseGameLayer::update(dt);
 		
-		if (recorder.state == state::playing) {
+if (recorder.state == state::playing && isAndroid) {
 			if (stateLabel != nullptr) {
 				if (stateLabel->getString() != "Playing" && Mod::get()->getSettingValue<bool>("show_playing_label"))
 					stateLabel->setString("Playing");
@@ -717,7 +830,7 @@ class $modify(GJBaseGameLayer) {
         	while (recorder.currentAction < static_cast<int>(recorder.macro.size()) &&
 			frame >= recorder.macro[recorder.currentAction].frame && !this->m_player1->m_isDead) {
             	auto& currentActionIndex = recorder.macro[recorder.currentAction];
-				xd = &currentActionIndex;
+				androidAction = &currentActionIndex;
 				if (!currentActionIndex.posOnly)
 					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
 					static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)][currentActionIndex.button-1]),
@@ -727,12 +840,114 @@ class $modify(GJBaseGameLayer) {
         	}
 			if (recorder.currentAction >= recorder.macro.size()) {
 				if (stateLabel!=nullptr) stateLabel->removeFromParent();
-				clearState();
+				clearState(false);
 			}
 		}
 
 	}
 };
+
+void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
+	reinterpret_cast<void(__thiscall *)(GJBaseGameLayer *)>(base::get() + 0x1BD240)(self);
+	if (recorder.state == state::recording) {
+		if (((playerHolding && !Mod::get()->getSettingValue<bool>("vanilla")) ||
+		Mod::get()->getSettingValue<bool>("frame_fix")) && !recorder.macro.empty()) {
+			
+			if (!(recorder.macro.back().frame == recorder.currentFrame() &&
+			(recorder.macro.back().posOnly || recorder.macro.back().p1.xPos != 0))) {
+				playerData p1 = {
+					self->m_player1->getPositionX(),
+					self->m_player1->getPositionY(),
+					self->m_player1->m_isUpsideDown,
+					-80085,
+					-80085,
+					-80085
+				};
+				playerData p2;
+				if (self->m_player2 != nullptr) {
+					p2 = {
+					self->m_player2->getPositionX(),
+					self->m_player2->getPositionY(),
+					self->m_player2->m_isUpsideDown,
+					-80085,
+					-80085,
+					-80085
+					};
+				} else {
+					p2.xPos = 0;
+				}
+				recorder.macro.push_back({true,recorder.currentFrame(),1,true,true,p1,p2});
+			}
+		}
+	}
+
+	if (recorder.state == state::playing) {
+			int frame = recorder.currentFrame();
+        	while (recorder.currentAction < static_cast<int>(recorder.macro.size()) &&
+			frame >= recorder.macro[recorder.currentAction].frame && !self->m_player1->m_isDead) {
+            	auto& currentActionIndex = recorder.macro[recorder.currentAction];
+
+				if (!safeModeEnabled && !isAndroid) {
+					safeModeEnabled = true;
+					safeMode::updateSafeMode();
+				}
+				if (!Mod::get()->getSettingValue<bool>("override_macro_mode") && currentActionIndex.p1.xPos != 0) {
+						if (!areEqual(self->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
+						!areEqual(self->m_player1->getPositionY(), currentActionIndex.p1.yPos))
+								self->m_player1->setPosition(cocos2d::CCPoint(currentActionIndex.p1.xPos, currentActionIndex.p1.yPos));
+
+						if (self->m_player1->m_isUpsideDown != currentActionIndex.p1.upsideDown && currentActionIndex.posOnly)
+							self->m_player1->flipGravity(currentActionIndex.p1.upsideDown, true);
+
+					
+						if (currentActionIndex.p2.xPos != 0 && self->m_player2 != nullptr) {
+							if (!areEqual(self->m_player2->getPositionX(), currentActionIndex.p2.xPos) ||
+							!areEqual(self->m_player2->getPositionY(), currentActionIndex.p2.yPos))
+								self->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
+
+							if (self->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
+								self->m_player2->flipGravity(currentActionIndex.p1.upsideDown, true);
+
+						}
+				} else {
+				if ((currentActionIndex.p1.xPos != 0 && self->m_player1 != nullptr) && (!Mod::get()->getSettingValue<bool>("vanilla") || Mod::get()->getSettingValue<bool>("frame_fix"))) {
+					if (((!Mod::get()->getSettingValue<bool>("vanilla") && !Mod::get()->getSettingValue<bool>("frame_fix")) && lastHold)
+					|| Mod::get()->getSettingValue<bool>("frame_fix")) {
+						if (!areEqual(self->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
+						!areEqual(self->m_player1->getPositionY(), currentActionIndex.p1.yPos))
+							self->m_player1->setPosition(cocos2d::CCPoint(currentActionIndex.p1.xPos, currentActionIndex.p1.yPos));
+							
+
+						if (self->m_player1->m_isUpsideDown != currentActionIndex.p1.upsideDown && currentActionIndex.posOnly)
+							self->m_player1->flipGravity(currentActionIndex.p1.upsideDown, true);
+
+					
+						if (currentActionIndex.p2.xPos != 0 && self->m_player2 != nullptr) {
+							if (!areEqual(self->m_player2->getPositionX(), currentActionIndex.p2.xPos) ||
+							!areEqual(self->m_player2->getPositionY(), currentActionIndex.p2.yPos))
+								self->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
+
+							if (self->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
+								self->m_player2->flipGravity(currentActionIndex.p1.upsideDown, true);
+
+						}
+					}
+				}
+				}
+				if (!currentActionIndex.posOnly) {
+					self->handleButton(currentActionIndex.holding, currentActionIndex.button, currentActionIndex.player1);
+					if (currentActionIndex.holding) lastHold = true;
+					else lastHold = false;
+				}
+
+            	recorder.currentAction++;
+        	}
+			if (recorder.currentAction >= recorder.macro.size()) {
+				if (stateLabel!=nullptr) stateLabel->removeFromParent();
+				clearState(true);
+			}
+		}
+}
 
 class $modify(PlayLayer) {
 	void resetLevel() {
@@ -743,6 +958,12 @@ class $modify(PlayLayer) {
 		}
 		
 		playerHolding = false;
+
+		if (safeModeEnabled && !isAndroid) {
+			safeModeEnabled = false;
+			safeMode::updateSafeMode();
+		}
+		
 
 		if (recorder.state == state::playing) {
 			leftOver = 0.f;
@@ -786,7 +1007,7 @@ class $modify(PlayLayer) {
 		if (recorder.state == state::recording)
 			shouldPlay2 = true;
 		
-		clearState();
+		clearState(true);
 	}
 };
 
@@ -797,17 +1018,17 @@ class $modify(EndLevelLayer) {
 			shouldPlay2 = false;
 			shouldPlay = true;
 		}
-		clearState();
+		clearState(false);
 	}
 
 	void goEdit() {
 		EndLevelLayer::goEdit();
-		clearState();
+		clearState(false);
 	}
 
 	void onMenu(CCObject* s) {
 		EndLevelLayer::onMenu(s);
-		clearState();
+		clearState(false);
 	}
 };
 int syncCooldown = 0;
@@ -828,7 +1049,7 @@ class $modify(CCScheduler) {
 		}
 
 		using namespace std::literals;
-		float dt2 = (1.f / ((recorder.state == state::recording) ? 60 : fixedFps));
+		float dt2 = (1.f / fixedFps);
 		dt = (recorder.state == state::recording) ? dt * speedhackValue : dt;
     	auto startTime = std::chrono::high_resolution_clock::now();
 		int mult = static_cast<int>((dt + leftOver)/dt2);  
@@ -884,4 +1105,15 @@ class $modify(CCKeyboardDispatcher) {
 $execute {
 	if (Mod::get()->getSavedValue<float>("previous_speed"))
 		prevSpeed = Mod::get()->getSavedValue<float>("previous_speed");
+	else
+		prevSpeed = 0.5f;
+
+	if (!isAndroid)
+		Mod::get()->hook(reinterpret_cast<void *>(base::get() + 0x1BD240), &GJBaseGameLayerProcessCommands, "GJBaseGameLayer::processCommands", tulip::hook::TulipConvention::Thiscall);
+	
+	for (std::size_t i = 0; i < 15; i++) {
+		safeMode::patches[i] = Mod::get()->patch(reinterpret_cast<void*>(base::get() + std::get<0>(safeMode::codes[i])),
+		std::get<1>(safeMode::codes[i])).unwrap();
+		safeMode::patches[i]->disable();
+	}
 }
