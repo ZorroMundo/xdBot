@@ -22,12 +22,6 @@ int offset = 0x328;
 	offset = 0x320;
 #endif
 
-bool isAndroid = false;
-
-#ifdef GEODE_IS_ANDROID
-	isAndroid = true;
-#endif
-
 bool safeModeEnabled = false;
 bool restart = false;
 bool stepFrame = false;
@@ -1110,7 +1104,9 @@ $execute {
 
 	if (!isAndroid)
 		Mod::get()->hook(reinterpret_cast<void *>(base::get() + 0x1BD240), &GJBaseGameLayerProcessCommands, "GJBaseGameLayer::processCommands", tulip::hook::TulipConvention::Thiscall);
-	
+	else 
+		slash = "/";
+
 	for (std::size_t i = 0; i < 15; i++) {
 		safeMode::patches[i] = Mod::get()->patch(reinterpret_cast<void*>(base::get() + std::get<0>(safeMode::codes[i])),
 		std::get<1>(safeMode::codes[i])).unwrap();
