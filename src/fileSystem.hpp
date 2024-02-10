@@ -3,13 +3,12 @@
 #include <codecvt>
 #include <string>
 
-bool isAndroid = false;
 
 #ifdef GEODE_IS_ANDROID
-	isAndroid = true;
+    std::string slash = "/";
+#else
+    std::string slash = "\\";
 #endif
-
-std::string slash = "\\";
 
 #define CCPOINT_CREATE(__X__,__Y__) cocos2d::CCPointMake((float)(__X__), (float)(__Y__))
 
