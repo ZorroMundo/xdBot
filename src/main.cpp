@@ -878,12 +878,21 @@ class $modify(GJBaseGameLayer) {
 		}
 
 		if (recorder.state != state::recording && isAndroid) {
+			if (disableFSBtn != nullptr) {
+				disableFSBtn->removeFromParent();
+				disableFSBtn = nullptr;
+			}
+			if (advanceFrameBtn != nullptr) {
+				advanceFrameBtn->removeFromParent();
+				advanceFrameBtn = nullptr;
+			}
+			if (speedhackBtn != nullptr) {
+				speedhackBtn->removeFromParent();
+				speedhackBtn = nullptr;
+			}
 			if (buttonsMenu != nullptr) {
 				buttonsMenu->removeFromParent();
 				buttonsMenu = nullptr;
-				disableFSBtn = nullptr;
-				advanceFrameBtn = nullptr;
-				speedhackBtn = nullptr;
 			}
 		}
 		
