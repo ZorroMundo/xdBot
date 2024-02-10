@@ -36,8 +36,6 @@ bool lastHold = false;
 bool shouldPlay = false;
 bool shouldPlay2 = false;
 
-data* androidAction = nullptr;
-
 int playerEnums[2][3] = {
     {cocos2d::enumKeyCodes::KEY_ArrowUp, cocos2d::enumKeyCodes::KEY_ArrowLeft, cocos2d::enumKeyCodes::KEY_ArrowRight}, 
     {cocos2d::enumKeyCodes::KEY_W, cocos2d::enumKeyCodes::KEY_A, cocos2d::enumKeyCodes::KEY_D}
@@ -123,6 +121,8 @@ struct data {
 	playerData p1;
 	playerData p2;
 };
+
+data* androidAction = nullptr;
 
 enum state {
     off,
