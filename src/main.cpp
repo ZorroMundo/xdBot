@@ -477,13 +477,6 @@ void macroCell::handleLoad(CCObject* btn) {
             	count++;
         	}
     	}
-		std::wstring andStr;
-		if (firstIt) {
-    		if (isSS >> andStr && andStr == L"android")
-        		recorder.android = true;
-				
-    		firstIt = false;
-		}
 
 		if (count > 3) {
 			if (isSS >> frame >> s >> holding >> s >> button >> 
@@ -510,6 +503,14 @@ void macroCell::handleLoad(CCObject* btn) {
 					(double)p2ySpeed,
 				};
 				recorder.macro.push_back({(bool)player1, (int)frame, (int)button, (bool)holding, (bool)posOnly, p1, p2});
+			}
+		} else if (count < 1) {
+			std::wstring andStr;
+			if (firstIt) {
+    			if (isSS >> andStr && andStr == L"android")
+        			recorder.android = true;
+
+    			firstIt = false;
 			}
 		} else {
 			if (isSS >> frame >> s >> holding >> s >> button >> 
