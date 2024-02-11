@@ -85,6 +85,10 @@
 			"importance": "required"
 		}
 	],
+	"issues": {
+		"url": "https://discord.gg/dwk5whfeu2",
+		"info": "If you find a bug and want to report it, you can do so in the Discord Server."
+	},
 	"developer": "Zilko",
-	"description": "Geometry Dash Bot"
+	"description": "Free botting tool for showcases."
 }
