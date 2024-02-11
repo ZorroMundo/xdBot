@@ -223,7 +223,7 @@ protected:
         	this,
         	menu_selector(RecordLayer::discordPopup)
     	);
-    	btn->setPosition(winSize/2.f-ccp(-m_size.width/2.f,m_size.height/2.f) + ccp(-310, 20));
+    	btn->setPosition(winSize/2.f-ccp(-m_size.width/2.f,m_size.height/2.f) + ccp(-315, 20));
     	menu->addChild(btn);
 
 		if (!isAndroid) {
