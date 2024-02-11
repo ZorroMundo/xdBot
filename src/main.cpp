@@ -23,12 +23,6 @@ int fixedFps = 240;
 	int offset = 0x328;
 #endif
 
-#ifdef GEODE_IS_ANDROID
-	bool isAndroid = true;
-#else
-	bool isAndroid = false;
-#endif
-
 bool safeModeEnabled = false;
 bool restart = false;
 bool stepFrame = false;
@@ -755,7 +749,12 @@ void addLabel(const char* text) {
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
 		GJBaseGameLayer::handleButton(holding,button,player1);
-		
+		if (!holding) {
+			for (int offset = 500; offset <= 900; ++offset) {
+				log::debug("{} - {}", offset, (*(double*)(((char*)PlayLayer::get()) + offset)));
+			}
+			log::debug("-------------------------------------------------");
+		}
 		if (isAndroid) {
 			if (recorder.state == state::recording) {
 			playerData p1;
