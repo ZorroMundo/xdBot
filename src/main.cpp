@@ -30,6 +30,7 @@ bool playerHolding = false;
 bool lastHold = false;
 bool shouldPlay = false;
 bool shouldPlay2 = false;
+bool playingAction = false;
 
 int playerEnums[2][3] = {
     {cocos2d::enumKeyCodes::KEY_ArrowUp, cocos2d::enumKeyCodes::KEY_ArrowLeft, cocos2d::enumKeyCodes::KEY_ArrowRight}, 
@@ -459,6 +460,7 @@ void macroCell::handleLoad(CCObject* btn) {
 		return;
 	}
 	bool firstIt = true;
+	bool andr = false;
 	while (std::getline(file, line)) {
 		std::wistringstream isSS(line);
 
@@ -507,10 +509,10 @@ void macroCell::handleLoad(CCObject* btn) {
 		} else if (count < 1) {
 			std::wstring andStr;
 			if (firstIt) {
-    			if (isSS >> andStr && andStr == L"android")
+    			if (isSS >> andStr && andStr == L"android") {
+					andr = true;
         			recorder.android = true;
-
-    			firstIt = false;
+				}
 			}
 		} else {
 			if (isSS >> frame >> s >> holding >> s >> button >> 
@@ -519,7 +521,11 @@ void macroCell::handleLoad(CCObject* btn) {
 				recorder.macro.push_back({(bool)player1, (int)frame, (int)button, (bool)holding, false, p1, p2});
 			}
 		}
+    	firstIt = false;
 	}
+	if (!andr && !recorder.android)
+		recorder.android = false;
+
 	CCArray* children = CCDirector::sharedDirector()->getRunningScene()->getChildren();
 	CCObject* child;
 	CCARRAY_FOREACH(children, child) {
@@ -764,9 +770,9 @@ void addLabel(const char* text) {
 
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
-		GJBaseGameLayer::handleButton(holding,button,player1);
 		if (isAndroid) {
 			if (recorder.state == state::recording) {
+			GJBaseGameLayer::handleButton(holding,button,player1);
 			playerData p1;
 			playerData p2;
 				p1 = {
@@ -791,7 +797,8 @@ class $modify(GJBaseGameLayer) {
 			}
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
-		} else if (recorder.state == state::playing) {
+		} else if (recorder.state == state::playing && playingAction) {
+			GJBaseGameLayer::handleButton(holding,button,player1);
 			if (androidAction != nullptr) {
 			if (!androidAction->posOnly && androidAction->p1.xPos != 0) {
 						if (!areEqual(this->m_player1->getPositionX(), androidAction->p1.xPos) ||
@@ -805,7 +812,9 @@ class $modify(GJBaseGameLayer) {
 						}
 				}
 		}
-		}
+		} else if (recorder.state != state::playing)
+			GJBaseGameLayer::handleButton(holding,button,player1);
+
 	} else if (recorder.state == state::recording) {
 			playerData p1;
 			playerData p2;
@@ -989,9 +998,11 @@ if (recorder.state == state::playing && isAndroid) {
             	auto& currentActionIndex = recorder.macro[recorder.currentAction];
 				androidAction = &currentActionIndex;
 				if (!currentActionIndex.posOnly)
+					playingAction = true;
 					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
 					static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)][currentActionIndex.button-1]),
 					currentActionIndex.holding, false);
+					playingAction = false;
 
             	recorder.currentAction++;
         	}
@@ -1092,7 +1103,9 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 				}
 				}
 				if (!currentActionIndex.posOnly) {
+					playingAction = true;
 					self->handleButton(currentActionIndex.holding, currentActionIndex.button, currentActionIndex.player1);
+					playingAction = false;
 					if (currentActionIndex.holding) lastHold = true;
 					else lastHold = false;
 				}
