@@ -136,7 +136,7 @@ enum state {
 
 class recordSystem {
 public:
-	bool android = false;
+	bool android = isAndroid;
     state state = off;
  	size_t currentAction = 0;
    	std::vector<data> macro;
@@ -337,11 +337,16 @@ public:
 		}
 		
  		std::stringstream infoText;
-    	infoText << "Current Macro:";
+		
     	infoText << "\nSize: " << recorder.macro.size();
+		
 		infoText << "\nClicks: " << clicksCount;
+
 		infoText << "\nDuration: " << (!recorder.macro.empty() 
 		? recorder.macro.back().frame / fixedFps : 0) << "s";
+
+		infoText << "\nPlatform: " << ((recorder.android) ? "Android" : "PC");
+
     	infoMacro->setString(infoText.str().c_str());
 	}
 
