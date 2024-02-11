@@ -38,13 +38,6 @@ struct dataTemp {
 	playerDataTemp p2;
 };
 
-
-enum stateTemp {
-    off,
-    recording,
-    playing
-};
-
 class recordSystemTemp {
 public:
    	std::vector<dataTemp> macro;
