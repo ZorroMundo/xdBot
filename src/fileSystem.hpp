@@ -136,26 +136,6 @@ public:
             auto path = std::filesystem::path(result.c_str());
             
 
-            if (path.empty()) {
-        FLAlertLayer::create("Error", "No file selected.", "Ok")->show();
-        return;
-    }
-    if (!std::filesystem::exists(path)) {
-        std::stringstream ss;
-        ss << "The selected file (" << path.string() << ") does not exist.";
-        FLAlertLayer::create("Error", ss.str().c_str(), "Ok")->show();
-        return;
-    }
-
-    if (std::filesystem::is_directory(path)) {
-        FLAlertLayer::create("Error", "You selected a directory.", "Ok")->show();
-        return;
-    }
-
-    if (path.extension().string() != ".xd") {
-        FLAlertLayer::create("Error", "The selected file must be xd.", "Ok")->show();
-        return;
-    }
     std::string copyPath = Mod::get()->getSaveDir().string()
             + slash + path.filename().string();
 
