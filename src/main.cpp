@@ -1188,10 +1188,11 @@ class $modify(CCScheduler) {
         	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
         	channel->setPitch(1);
 		}
-
+		if (isAndroid)
+			return CCScheduler::update(1.f / 60);
+		
 		using namespace std::literals;
-		int fps = (isAndroid) ? 60 : fixedFps;
-		float dt2 = (1.f / fps);
+		float dt2 = (1.f / fixedFps);
 		dt = (recorder.state == state::recording) ? dt * speedhackValue : dt;
     	auto startTime = std::chrono::high_resolution_clock::now();
 		int mult = static_cast<int>((dt + leftOver)/dt2);  
