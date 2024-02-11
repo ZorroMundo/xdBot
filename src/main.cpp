@@ -16,6 +16,7 @@ float leftOver = 0.f; // For CCScheduler
 double prevSpeed = 1.0f;
 
 int fixedFps = 240;
+int androidFps = 60;
 
 #ifdef GEODE_IS_ANDROID
 	int offset = 0x320;
@@ -207,6 +208,16 @@ protected:
     	btn->setPosition(winSize/2.f-ccp(m_size.width/2.f,m_size.height/2.f) + ccp(325, 20));
     	menu->addChild(btn);
 
+		auto spr = CCSprite::createWithSpriteFrameName("gj_discordIcon_001.png");
+    	spr->setScale(0.8f);
+    	auto btn = CCMenuItemSpriteExtra::create(
+        	spr,
+        	this,
+        	menu_selector(RecordLayer::discordPopup)
+    	);
+    	btn->setPosition(winSize/2.f-ccp(-m_size.width/2.f,m_size.height/2.f) + ccp(-325, 20));
+    	menu->addChild(btn);
+
 		if (!isAndroid) {
 		spr = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
     	spr->setScale(0.65f);
@@ -287,6 +298,18 @@ public:
  
 	void openSettingsMenu(CCObject*) {
 		geode::openSettingsPopup(Mod::get());
+	}
+
+	void discordPopup(CCObject*) {
+		geode::createQuickPopup(
+    	"Join Discord",     
+    	"Join the <cb>Discord</c> server?", 
+    	"No", "Yes",  
+    	[this](auto, bool btn2) {
+        	if (btn2) {
+				geode::utils::web::openLinkInBrowser("https://discord.gg/dwk5whfeu2");
+			}
+    	});
 	}
 
 	void keyInfo(CCObject*) {
@@ -973,7 +996,8 @@ class $modify(GJBaseGameLayer) {
 			if (Mod::get()->getSettingValue<bool>("frame_stepper") && stepFrame == false) 
 				return;
 			else if (stepFrame) {
-				GJBaseGameLayer::update(1.f/fixedFps);
+				int fps = (isAndroid) ? androidFps : fixedFps;
+				GJBaseGameLayer::update(1.f/fps);
 				stepFrame = false;
 				recorder.syncMusic();
 			} else GJBaseGameLayer::update(dt);
@@ -1223,7 +1247,7 @@ class $modify(CCScheduler) {
 		} else 
 			wasAndroid = true;
 
-		int fps = (isAndroid && wasAndroid) ? 60 : fixedFps;
+		int fps = (isAndroid && wasAndroid) ? androidFps : fixedFps;
 		float dt2 = (1.f / fps);
 		dt = (recorder.state == state::recording) ? dt * speedhackValue : dt;
     	auto startTime = std::chrono::high_resolution_clock::now();
