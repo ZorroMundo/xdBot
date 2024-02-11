@@ -37,6 +37,14 @@ int playerEnums[2][3] = {
     {cocos2d::enumKeyCodes::KEY_W, cocos2d::enumKeyCodes::KEY_A, cocos2d::enumKeyCodes::KEY_D}
 };
 
+void releaseKeys() {
+	for (int row = 0; row < 2; ++row) {
+        for (int col = 0; col < 3; ++col) {
+			cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(static_cast<cocos2d::enumKeyCodes>(playerEnums[row][col]), false, false);
+        }
+    }
+}
+
 bool areEqual(float a, float b) {
     return std::abs(a - b) < 0.1f;
 }
@@ -208,9 +216,9 @@ protected:
     	btn->setPosition(winSize/2.f-ccp(m_size.width/2.f,m_size.height/2.f) + ccp(325, 20));
     	menu->addChild(btn);
 
-		auto spr = CCSprite::createWithSpriteFrameName("gj_discordIcon_001.png");
+		spr = CCSprite::createWithSpriteFrameName("gj_discordIcon_001.png");
     	spr->setScale(0.8f);
-    	auto btn = CCMenuItemSpriteExtra::create(
+    	btn = CCMenuItemSpriteExtra::create(
         	spr,
         	this,
         	menu_selector(RecordLayer::discordPopup)
@@ -794,6 +802,7 @@ class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
 		if (isAndroid) {
 			if (recorder.state == state::recording) {
+			GJBaseGameLayer::handleButton(holding,button,player1);
 			playerData p1;
 			playerData p2;
 				p1 = {
@@ -832,7 +841,7 @@ class $modify(GJBaseGameLayer) {
 						}
 						GJBaseGameLayer::handleButton(holding,button,player1);
 				}
-		} else GJBaseGameLayer::handleButton(holding,button,player1);
+		}
 		} else GJBaseGameLayer::handleButton(holding,button,player1);
 
 	} else if (recorder.state == state::recording) {
@@ -1147,6 +1156,11 @@ class $modify(PlayLayer) {
 		
 		playerHolding = false;
 		leftOver = 0.f;
+
+		if (isAndroid) {
+			androidAction = nullptr;
+			releaseKeys();
+		}
 
 		if (safeModeEnabled && !isAndroid) {
 			safeModeEnabled = false;
