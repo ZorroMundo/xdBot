@@ -1,8 +1,9 @@
 # v1.4.0
 
  * Added android support.
+ * Slightly improved respawn lag while recording.
  * Changed the menu button sprite.
- * Updated the about (filler changelog).
+ * Added discord button.
 
 # v1.3.10
  
