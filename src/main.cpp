@@ -769,7 +769,6 @@ void addLabel(const char* text) {
 
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
-		GJBaseGameLayer::handleButton(holding,button,player1);
 		if (isAndroid) {
 			if (recorder.state == state::recording) {
 			playerData p1;
@@ -808,9 +807,11 @@ class $modify(GJBaseGameLayer) {
 							!areEqual(this->m_player2->getPositionY(), androidAction->p2.yPos))
 								this->m_player2->setPosition(cocos2d::CCPoint(androidAction->p2.xPos, androidAction->p2.yPos));
 						}
+						GJBaseGameLayer::handleButton(holding,button,player1);
 				}
-		}
-		}
+		} else GJBaseGameLayer::handleButton(holding,button,player1);
+		} else GJBaseGameLayer::handleButton(holding,button,player1);
+
 	} else if (recorder.state == state::recording) {
 			playerData p1;
 			playerData p2;
@@ -851,6 +852,7 @@ class $modify(GJBaseGameLayer) {
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		}
+		GJBaseGameLayer::handleButton(holding,button,player1);
 	}
 
 	int getPlayer1(int p1, GJBaseGameLayer* bgl) {
