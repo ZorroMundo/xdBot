@@ -852,7 +852,7 @@ class $modify(GJBaseGameLayer) {
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		}
-		GJBaseGameLayer::handleButton(holding,button,player1);
+		if (!isAndroid) GJBaseGameLayer::handleButton(holding,button,player1);
 	}
 
 	int getPlayer1(int p1, GJBaseGameLayer* bgl) {
