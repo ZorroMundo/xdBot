@@ -340,3 +340,4 @@ public:
     void saveMacro(CCObject*);
    
 };
+//end 2
