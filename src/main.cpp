@@ -223,7 +223,7 @@ protected:
         	this,
         	menu_selector(RecordLayer::discordPopup)
     	);
-    	btn->setPosition(winSize/2.f-ccp(-m_size.width/2.f,m_size.height/2.f) + ccp(-325, 20));
+    	btn->setPosition(winSize/2.f-ccp(-m_size.width/2.f,m_size.height/2.f) + ccp(-310, 20));
     	menu->addChild(btn);
 
 		if (!isAndroid) {
@@ -311,7 +311,7 @@ public:
 	void discordPopup(CCObject*) {
 		geode::createQuickPopup(
     	"Join Discord",     
-    	"Join the <cb>Discord</c> server?", 
+    	"Join the <cb>Discord</c> server?\n(<cl>discord.gg/dwk5whfeu2</c>)", 
     	"No", "Yes",  
     	[this](auto, bool btn2) {
         	if (btn2) {
@@ -800,6 +800,7 @@ void addLabel(const char* text) {
 
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
+		if (!isAndroid) GJBaseGameLayer::handleButton(holding,button,player1);
 		if (isAndroid) {
 			if (recorder.state == state::recording) {
 			GJBaseGameLayer::handleButton(holding,button,player1);
@@ -829,7 +830,7 @@ class $modify(GJBaseGameLayer) {
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else if (recorder.state == state::playing) {
 			if (androidAction != nullptr) {
-			if (!androidAction->posOnly && androidAction->p1.xPos != 0 && androidAction->frame == recorder.currentFrame()) {
+			if (!androidAction->posOnly && androidAction->p1.xPos != 0) {
 						if (!areEqual(this->m_player1->getPositionX(), androidAction->p1.xPos) ||
 						!areEqual(this->m_player1->getPositionY(), androidAction->p1.yPos))
 								this->m_player1->setPosition(cocos2d::CCPoint(androidAction->p1.xPos, androidAction->p1.yPos));
@@ -884,7 +885,6 @@ class $modify(GJBaseGameLayer) {
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		}
-		if (!isAndroid) GJBaseGameLayer::handleButton(holding,button,player1);
 	}
 
 	int getPlayer1(int p1, GJBaseGameLayer* bgl) {
