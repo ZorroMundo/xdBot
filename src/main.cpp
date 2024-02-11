@@ -749,6 +749,7 @@ void addLabel(const char* text) {
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
 		GJBaseGameLayer::handleButton(holding,button,player1);
+		Mod::get()->setSettingValue("frame_stepper", true);
 		if (!holding) {
 			for (int offset = 500; offset <= 900; ++offset) {
 				log::debug("{} - {}", offset, (*(double*)(((char*)PlayLayer::get()) + offset)));
