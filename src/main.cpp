@@ -127,6 +127,7 @@ enum state {
 
 class recordSystem {
 public:
+	bool android = false;
     state state = off;
  	size_t currentAction = 0;
    	std::vector<data> macro;
@@ -143,10 +144,12 @@ public:
 	}
 	void recordAction(bool holding, int button, bool player1, int frame, GJBaseGameLayer* bgl, playerData p1Data, playerData p2Data) {
 		bool realp1;
-		if (isAndroid)
+		if (isAndroid) {
 			realp1 = (GameManager::get()->getGameVariable("0010") && !bgl->m_levelSettings->m_platformerMode) ? !player1 : player1;
-		else
-			realp1 = player1;
+			if (!android)
+				android = true;
+		}
+		else realp1 = player1;
 		
     	macro.push_back({realp1, frame, button, holding, false, p1Data, p2Data});
 	}
@@ -396,6 +399,9 @@ void saveMacroPopup::saveMacro(CCObject*) {
     file.imbue(utf8_locale);
 
 	if (file.is_open()) {
+		if (isAndroid) {
+			file << "android\n";
+		}
 		for (auto &action : recorder.macro) {
 			file << action.frame << "|" << action.holding <<
 			"|" << action.button << "|" << action.player1 <<
@@ -496,6 +502,8 @@ void macroCell::handleLoad(CCObject* btn) {
 				};
 				recorder.macro.push_back({(bool)player1, (int)frame, (int)button, (bool)holding, (bool)posOnly, p1, p2});
 			}
+		} else if (count < 1) {
+			recorder.android = true;
 		} else {
 			if (isSS >> frame >> s >> holding >> s >> button >> 
 			s >> player1 && s == L'|') {
@@ -1188,11 +1196,20 @@ class $modify(CCScheduler) {
         	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
         	channel->setPitch(1);
 		}
-		if (isAndroid)
-			return CCScheduler::update(1.f / 60);
-		
+
 		using namespace std::literals;
-		float dt2 = (1.f / fixedFps);
+
+		bool wasAndroid;
+		if (recorder.state == state::playing) {
+			if (recorder.android)
+				wasAndroid = true;
+			else
+			 	wasAndroid = false;
+		} else 
+			wasAndroid = true;
+
+		int fps = (isAndroid && wasAndroid) ? 60 : fixedFps;
+		float dt2 = (1.f / fps);
 		dt = (recorder.state == state::recording) ? dt * speedhackValue : dt;
     	auto startTime = std::chrono::high_resolution_clock::now();
 		int mult = static_cast<int>((dt + leftOver)/dt2);  
