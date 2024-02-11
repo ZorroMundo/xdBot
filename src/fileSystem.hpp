@@ -157,7 +157,7 @@ public:
 			)->show();
         });
     }
-
+//i
     bool setup(std::string const& value) override {
         CCArray* macroList = CCArray::create();
         auto winSize = CCDirector::sharedDirector()->getWinSize();
