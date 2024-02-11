@@ -4,46 +4,16 @@
 #include <string>
 
 #ifdef GEODE_IS_ANDROID
+    std::string slash = "/";
 	bool isAndroid = true;
 #else
-	bool isAndroid = false;
-#endif
-
-#ifdef GEODE_IS_ANDROID
-    std::string slash = "/";
-#else
     std::string slash = "\\";
+	bool isAndroid = false;
 #endif
 
 #define CCPOINT_CREATE(__X__,__Y__) cocos2d::CCPointMake((float)(__X__), (float)(__Y__))
 
 using namespace geode::prelude;
-
-struct playerDataTemp {
-	float xPos;
-	float yPos;
-	bool upsideDown;
-	float rotation;
-	double xSpeed;
-	double ySpeed;
-};
-
-struct dataTemp {
-    bool player1;
-    int frame;
-    int button;
-    bool holding;
-	bool posOnly;
-	playerDataTemp p1;
-	playerDataTemp p2;
-};
-
-class recordSystemTemp {
-public:
-   	std::vector<dataTemp> macro;
-};
-
-
 class macroCell : public CCNode {
 public:
     static macroCell* create(std::string name) {
@@ -143,143 +113,50 @@ public:
 };
 
 class loadMacroPopup : public geode::Popup<std::string const&> {
-recordSystemTemp recorderTemp;
 public:
     void importMacro(CCObject*) {
         file::FilePickOptions fileOptions;
-        if (isAndroid) {
-            fileOptions = {
-                std::nullopt,
-                {}
-            };
-        } else {
-            file::FilePickOptions::Filter textFilter;
-            textFilter.description = "Macro Files";
-            textFilter.files = {"*.xd"};
-            fileOptions.filters.push_back(textFilter);
-        }
-        
+        file::FilePickOptions::Filter textFilter;
+        textFilter.description = "Macro Files";
+        textFilter.files = {"*.xd"};
+        fileOptions.filters.push_back(textFilter);
+
         file::pickFile(file::PickMode::OpenFile , fileOptions, [this](ghc::filesystem::path result) {
-            auto path = std::filesystem::path(result.c_str());
+            auto path = ghc::filesystem::path(result.c_str());
             
-
-        if (path.empty()) {
-        FLAlertLayer::create("Import Macro", "error 1.", "Ok")->show();
-        return;
-    }
-    if (!std::filesystem::exists(path)) {
-        FLAlertLayer::create("Import Macro", "error 2", "Ok")->show();
-        return;
-    }
-
-    if (std::filesystem::is_directory(path)) {
-        FLAlertLayer::create("Import Macro", "Error 3", "Ok")->show();
-        return;
-    }
-    if (path.extension().string() != ".xd") {
-        FLAlertLayer::create("Import macro", "The selected file must be xd.", "Ok")->show();
-        return;
-    }
-
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    std::wstring wideString = converter.from_bytes(path.string());
-	std::locale utf8_locale(std::locale(), new std::codecvt_utf8<wchar_t>);
-
-
-    std::wifstream file(wideString);
-    file.imbue(utf8_locale);
-	std::wstring line;
-	if (!file.is_open()) {
-    	FLAlertLayer::create(
+            std::ifstream sourceMacro(path);
+            if (!sourceMacro.is_open()) {
+            FLAlertLayer::create(
     		    "Import Macro",   
     		    "An <cr>error</c> occurred while importing this macro.",  
     		    "OK"      
-		)->show();
-        return;
-	}
-	while (std::getline(file, line)) {
-		std::wistringstream isSS(line);
+			)->show();
+            return;
+            }
+            std::ofstream copiedMacro(Mod::get()->getSaveDir().string()
+            + slash + path.filename().string(), std::ios::binary);
 
-		playerDataTemp p1;
-		playerDataTemp p2;
+            if (!copiedMacro.is_open()) {
+                FLAlertLayer::create(
+    		        "Import Macro",   
+    		        "An <cr>error</c> occurred while importing this macro.",  
+    		        "OK"      
+			    )->show();
+                return;
+            }
 
-		int holding, frame, button, player1, posOnly;
-		float p1xPos, p1yPos, p1rotation, p1xSpeed, p1ySpeed;
-		float p2xPos, p2yPos, p2rotation, p2xSpeed, p2ySpeed;
-		int p1upsideDown, p2upsideDown;
+            copiedMacro << sourceMacro.rdbuf();
 
-		wchar_t s;
-		int count = 0;
-    	for (char ch : line) {
-        	if (ch == '|') {
-            	count++;
-        	}
-    	}
-		if (count > 3) {
-			if (isSS >> frame >> s >> holding >> s >> button >> 
-			s >> player1 >> s >> posOnly >> s >>
-			p1xPos >> s >> p1yPos >> s >> p1upsideDown
-		 	>> s >> p1rotation >> s >> p1xSpeed >> s >>
-		 	p1ySpeed >> s >> p2xPos >> s >> p2yPos >> s >> p2upsideDown
-		 	>> s >> p2rotation >> s >> p2xSpeed >> s >>
-		 	p2ySpeed && s == L'|') {
-				p1 = {
-					(float)p1xPos,
-					(float)p1yPos,
-					(bool)p1upsideDown,
-					(float)p1rotation,
-					(double)p1xSpeed,
-					(double)p1ySpeed,
-				};
-				p2 = {
-					(float)p2xPos,
-					(float)p2yPos,
-					(bool)p2upsideDown,
-					(float)p2rotation,
-					(double)p2xSpeed,
-					(double)p2ySpeed,
-				};
-				this->recorderTemp.macro.push_back({(bool)player1, (int)frame, (int)button, (bool)holding, (bool)posOnly, p1, p2});
-			}
-		} else {
-			if (isSS >> frame >> s >> holding >> s >> button >> 
-			s >> player1 && s == L'|') {
-				p1.xPos = 0;
-				this->recorderTemp.macro.push_back({(bool)player1, (int)frame, (int)button, (bool)holding, false, p1, p2});
-			}
-		}
-	}
-	
-    std::string copyPath = Mod::get()->getSaveDir().string()
-            + slash + path.filename().string();
-
-    std::wstring wideString2 = converter.from_bytes(copyPath);
-
-    std::wofstream file2(wideString2);
-    file2.imbue(utf8_locale);
-
-	if (file2.is_open()) {
-		for (auto &action : this->recorderTemp.macro) {
-			file2 << action.frame << "|" << action.holding <<
-			"|" << action.button << "|" << action.player1 <<
-			"|" << action.posOnly << "|" << action.p1.xPos <<
-			"|" << action.p1.yPos << "|" << action.p1.upsideDown <<
-			"|" << action.p1.rotation << "|" << action.p1.xSpeed <<
-			"|" << action.p1.ySpeed << "|" << action.p2.xPos <<
-			"|" << action.p2.yPos << "|" << action.p2.upsideDown <<
-			"|" << action.p2.rotation << "|" << action.p2.xSpeed <<
-			"|" << action.p2.ySpeed  << "\n";
-		}
-		file2.close();
+            sourceMacro.close();
+            copiedMacro.close();
             refresh();
             FLAlertLayer::create(
     		    "Import Macro",   
     		    "Macro imported <cg>successfully</c>.",  
     		    "OK"      
 			)->show();
-        }
-    });
-}
+        });
+    }
 
     bool setup(std::string const& value) override {
         CCArray* macroList = CCArray::create();
@@ -299,6 +176,7 @@ public:
         auto menu = CCMenu::create();
         menu->setPosition({0,0});
 
+        if (!isAndroid) {
         CCSprite* importMacroSprite = CCSprite::createWithSpriteFrameName("GJ_plusBtn_001.png");
         importMacroSprite->setScale(0.8f);
         auto importMacroButton = CCMenuItemSpriteExtra::create(
@@ -308,6 +186,7 @@ public:
         );
         importMacroButton->setPosition(corner + CCPOINT_CREATE(380,65));
         menu->addChild(importMacroButton);
+        }
 
         m_mainLayer->addChild(menu);
         auto openFolderBtn = CCMenuItemSpriteExtra::create(
