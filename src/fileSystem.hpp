@@ -133,21 +133,21 @@ public:
         }
         
         file::pickFile(file::PickMode::OpenFile , fileOptions, [this](ghc::filesystem::path result) {
-            auto path = ghc::filesystem::path(result.c_str());
+            auto path = std::filesystem::path(result.c_str());
             
 
             if (path.empty()) {
         FLAlertLayer::create("Error", "No file selected.", "Ok")->show();
         return;
     }
-    if (!ghc::filesystem::exists(path)) {
+    if (!std::filesystem::exists(path)) {
         std::stringstream ss;
         ss << "The selected file (" << path.string() << ") does not exist.";
         FLAlertLayer::create("Error", ss.str().c_str(), "Ok")->show();
         return;
     }
 
-    if (ghc::filesystem::is_directory(path)) {
+    if (std::filesystem::is_directory(path)) {
         FLAlertLayer::create("Error", "You selected a directory.", "Ok")->show();
         return;
     }
@@ -160,8 +160,8 @@ public:
             + slash + path.filename().string();
 
     try {
-        ghc::filesystem::copy_file(path, copyPath);
-    } catch (ghc::filesystem::filesystem_error e) {
+        std::filesystem::copy_file(path, copyPath);
+    } catch (std::filesystem::filesystem_error e) {
         log::debug("import error: {}",e.what());
         std::stringstream ss;
         ss << "An <cr>error</c> occurred while importing this macro.\n" << e.what();
