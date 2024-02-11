@@ -749,13 +749,6 @@ void addLabel(const char* text) {
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
 		GJBaseGameLayer::handleButton(holding,button,player1);
-		Mod::get()->setSettingValue("frame_stepper", true);
-		if (!holding) {
-			for (int offset = 5; offset <= 2000; ++offset) {
-				log::debug("{} - {}", offset, (*(double*)(((char*)PlayLayer::get()) + offset)));
-			}
-			log::debug("-------------------------------------------------");
-		}
 		if (isAndroid) {
 			if (recorder.state == state::recording) {
 			playerData p1;
@@ -1264,9 +1257,13 @@ $execute {
 	else
 		prevSpeed = 0.5f;
 
-
 	if (!isAndroid)
 		Mod::get()->hook(reinterpret_cast<void *>(base::get() + 0x1BD240), &GJBaseGameLayerProcessCommands, "GJBaseGameLayer::processCommands", tulip::hook::TulipConvention::Thiscall);
+	else {
+		if (sizeof(void*) == 8) {
+        	offset = 0x3B8;
+    	}
+	}
 
 	for (std::size_t i = 0; i < 15; i++) {
 		safeMode::patches[i] = Mod::get()->patch(reinterpret_cast<void*>(base::get() + std::get<0>(safeMode::codes[i])),
