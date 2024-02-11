@@ -2,7 +2,12 @@
 #include <locale>
 #include <codecvt>
 #include <string>
-//wa
+
+#ifdef GEODE_IS_ANDROID
+	bool isAndroid = true;
+#else
+	bool isAndroid = false;
+#endif
 
 #ifdef GEODE_IS_ANDROID
     std::string slash = "/";
@@ -115,38 +120,59 @@ class loadMacroPopup : public geode::Popup<std::string const&> {
 public:
     void importMacro(CCObject*) {
         file::FilePickOptions fileOptions;
-        file::FilePickOptions::Filter textFilter;
-        textFilter.description = "Macro Files";
-        textFilter.files = {"*.xd"};
-        fileOptions.filters.push_back(textFilter);
-
+        if (isAndroid) {
+            fileOptions = {
+                std::nullopt,
+                {}
+            };
+        } else {
+            file::FilePickOptions::Filter textFilter;
+            textFilter.description = "Macro Files";
+            textFilter.files = {"*.xd"};
+            fileOptions.filters.push_back(textFilter);
+        }
+        
         file::pickFile(file::PickMode::OpenFile , fileOptions, [this](ghc::filesystem::path result) {
             auto path = ghc::filesystem::path(result.c_str());
-            std::ifstream sourceMacro(path);
-            if (!sourceMacro.is_open()) {
-            FLAlertLayer::create(
+            
+
+            if (path.empty()) {
+        FLAlertLayer::create("Error", "No file selected.", "Ok")->show();
+        return;
+    }
+    if (!ghc::filesystem::exists(path)) {
+        std::stringstream ss;
+        ss << "The selected file (" << path.string() << ") does not exist.";
+        FLAlertLayer::create("Error", ss.str().c_str(), "Ok")->show();
+        return;
+    }
+
+    if (ghc::filesystem::is_directory(path)) {
+        FLAlertLayer::create("Error", "You selected a directory.", "Ok")->show();
+        return;
+    }
+
+    if (path.extension().string() != ".xd") {
+        FLAlertLayer::create("Error", "The selected file must be xd.", "Ok")->show();
+        return;
+    }
+    std::string copyPath = Mod::get()->getSaveDir().string()
+            + slash + path.filename().string();
+
+    try {
+        ghc::filesystem::copy_file(path, copyPath);
+    } catch (ghc::filesystem::filesystem_error e) {
+        log::debug("import error: {}",e.what());
+        std::stringstream ss;
+        ss << "An <cr>error</c> occurred while importing this macro.\n" << e.what();
+        FLAlertLayer::create(
     		    "Import Macro",   
-    		    "An <cr>error<c/> occurred while importing this macro.",  
+    		    ss.str().c_str(),  
     		    "OK"      
-			)->show();
-            return;
-            }
-            std::ofstream copiedMacro(Mod::get()->getSaveDir().string()
-            + slash + path.filename().string(), std::ios::binary);
+		)->show();
+        return;
+    }
 
-            if (!copiedMacro.is_open()) {
-                FLAlertLayer::create(
-    		        "Import Macro",   
-    		        "An <cr>error<c/> occurred while importing this macro.",  
-    		        "OK"      
-			    )->show();
-                return;
-            }
-
-            copiedMacro << sourceMacro.rdbuf();
-
-            sourceMacro.close();
-            copiedMacro.close();
             refresh();
             FLAlertLayer::create(
     		    "Import Macro",   
