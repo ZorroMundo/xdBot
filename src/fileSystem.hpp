@@ -135,29 +135,29 @@ public:
         file::pickFile(file::PickMode::OpenFile , fileOptions, [this](ghc::filesystem::path result) {
             auto path = std::filesystem::path(result.c_str());
             
-if (path.extension().string() != ".xd") {
-        FLAlertLayer::create("Import Macro",
-		"Not a <cg>.xd</c> file.",
-		"Ok")->show();
+
+        if (path.empty()) {
+        FLAlertLayer::create("Import Macro", "error 1.", "Ok")->show();
+        return;
+    }
+    if (!std::filesystem::exists(path)) {
+        FLAlertLayer::create("Import Macro", "error 2", "Ok")->show();
+        return;
+    }
+
+    if (std::filesystem::is_directory(path)) {
+        FLAlertLayer::create("Import Macro", "Error 3", "Ok")->show();
+        return;
+    }
+    if (path.extension().string() != ".xd") {
+        FLAlertLayer::create("Import macro", "The selected file must be xd.", "Ok")->show();
         return;
     }
 		
     std::string copyPath = Mod::get()->getSaveDir().string()
             + slash + path.filename().string();
 
-    try {
-        std::filesystem::copy_file(path, copyPath);
-    } catch (std::filesystem::filesystem_error e) {
-        log::debug("import error: {}",e.what());
-        std::stringstream ss;
-        ss << "An <cr>error</c> occurred while importing this macro: " << e.what();
-        FLAlertLayer::create(
-    		    "Import Macro",   
-    		    ss.str().c_str(),  
-    		    "OK"      
-		)->show();
-        return;
-    }
+    
 
             refresh();
             FLAlertLayer::create(
