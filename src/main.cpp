@@ -751,7 +751,7 @@ class $modify(GJBaseGameLayer) {
 		GJBaseGameLayer::handleButton(holding,button,player1);
 		Mod::get()->setSettingValue("frame_stepper", true);
 		if (!holding) {
-			for (int offset = 500; offset <= 900; ++offset) {
+			for (int offset = 5; offset <= 2000; ++offset) {
 				log::debug("{} - {}", offset, (*(double*)(((char*)PlayLayer::get()) + offset)));
 			}
 			log::debug("-------------------------------------------------");
