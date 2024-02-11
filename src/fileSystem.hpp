@@ -157,7 +157,7 @@ public:
     std::string copyPath = Mod::get()->getSaveDir().string()
             + slash + path.filename().string();
 
-        std::filesystem::copy_file(path, copyPath);
+       // std::filesystem::copy_file(path, copyPath);
 
             refresh();
             FLAlertLayer::create(
