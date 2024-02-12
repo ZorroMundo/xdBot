@@ -607,6 +607,8 @@ void clearState(bool safeMode) {
 	androidAction = nullptr;
 	leftOver = 0.f;
 
+	if (isAndroid) releaseKeys();
+
 	if (PlayLayer::get()) {
 		CCArray* children = PlayLayer::get()->getChildren();
 		CCObject* child;
@@ -847,16 +849,11 @@ class $modify(GJBaseGameLayer) {
 				!areEqual(this->m_player1->getPositionY(), androidAction->p1.yPos))
 					this->m_player1->setPosition(cocos2d::CCPoint(androidAction->p1.xPos, androidAction->p1.yPos));
 					
-				if (this->m_player1->m_isUpsideDown != androidAction->p1.upsideDown && androidAction->posOnly)
-					this->m_player1->flipGravity(androidAction->p1.upsideDown, true);
-
 				if (androidAction->p2.xPos != 0 && this->m_player2 != nullptr) {
 					if (!areEqual(this->m_player2->getPositionX(), androidAction->p2.xPos) ||
 					!areEqual(this->m_player2->getPositionY(), androidAction->p2.yPos))
 						this->m_player2->setPosition(cocos2d::CCPoint(androidAction->p2.xPos, androidAction->p2.yPos));
 
-					if (this->m_player2->m_isUpsideDown != androidAction->p2.upsideDown && androidAction->posOnly)
-						this->m_player2->flipGravity(androidAction->p2.upsideDown, true);
 				}
 			}
 		}
@@ -899,9 +896,26 @@ class $modify(GJBaseGameLayer) {
 			} else {
 				p1.xPos = 0;
 			}
-			int frame = recorder.currentFrame(); 
-			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
+			if (Mod::get()->getSettingValue<bool>("vanilla") && !Mod::get()->getSettingValue<bool>("frame_fix")) {
+				p1 = {
+				0.f,
+				0.f,
+				this->m_player1->m_isUpsideDown,
+				-80085,
+				-80085,
+				-80085
+			};
+				p2 = {
+				0.f,
+				0.f,
+				this->m_player2->m_isUpsideDown,
+				-80085,
+				-80085,
+				-80085
+				};
 		}
+			recorder.recordAction(holding, button, player1, recorder.currentFrame(), this, p1, p2);
+	}
 	}
 
 	int getPlayer1(int p1, GJBaseGameLayer* bgl) {
