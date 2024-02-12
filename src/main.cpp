@@ -1318,17 +1318,7 @@ class $modify(CCScheduler) {
 
 		using namespace std::literals;
 
-		bool wasAndroid;
-		if (recorder.state == state::playing) {
-			if (recorder.android)
-				wasAndroid = true;
-			else
-			 	wasAndroid = false;
-		} else 
-			wasAndroid = true;
-
-		int fps = (isAndroid && wasAndroid) ? androidFps : fixedFps;
-		float dt2 = (1.f / fps);
+		float dt2 = (1.f / recorder.fps);
 		dt = (recorder.state == state::recording) ? dt * speedhackValue : dt;
     	auto startTime = std::chrono::high_resolution_clock::now();
 		int mult = static_cast<int>((dt + leftOver)/dt2);  
