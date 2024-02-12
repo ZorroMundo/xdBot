@@ -1076,7 +1076,8 @@ class $modify(GJBaseGameLayer) {
 			if (Mod::get()->getSettingValue<bool>("frame_stepper") && stepFrame == false) 
 				return;
 			else if (stepFrame) {
-				GJBaseGameLayer::update(1.f/ recorder.fps);
+				int fps = (recorder.fps > 240) ? 240 : recorder.fps;
+				GJBaseGameLayer::update(1.f / fps);
 				stepFrame = false;
 				recorder.syncMusic();
 			} else GJBaseGameLayer::update(dt);
