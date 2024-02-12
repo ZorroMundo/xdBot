@@ -174,7 +174,7 @@ class RecordLayer : public geode::Popup<std::string const&> {
 protected:
     bool setup(std::string const& value) override {
         auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
-		auto versionLabel = CCLabelBMFont::create("xdBot v1.4.0 - made by Zilko", "chatFont.fnt");
+		auto versionLabel = CCLabelBMFont::create("xdBot v1.4.1 - made by Zilko", "chatFont.fnt");
 		versionLabel->setOpacity(60);
 		versionLabel->setAnchorPoint(ccp(0.0f,0.5f));
 		versionLabel->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(3, 6));
@@ -596,10 +596,24 @@ void clearState(bool safeMode) {
 	channel->setPitch(1);
 	recorder.state = state::off;
 
-	buttonsMenu = nullptr;
-	advanceFrameBtn = nullptr;
-	disableFSBtn = nullptr;
-	speedhackBtn = nullptr;
+	if (isAndroid) {
+		if (disableFSBtn != nullptr) {
+			disableFSBtn->removeFromParent();
+			disableFSBtn = nullptr;
+		}
+		if (advanceFrameBtn != nullptr) {
+			advanceFrameBtn->removeFromParent();
+			advanceFrameBtn = nullptr;
+		}
+		if (speedhackBtn != nullptr) {
+			speedhackBtn->removeFromParent();
+			speedhackBtn = nullptr;
+		}
+		if (buttonsMenu != nullptr) {
+			buttonsMenu->removeFromParent();
+			buttonsMenu = nullptr;
+		}
+	}
 
 	frameLabel = nullptr;
 	stateLabel = nullptr;
@@ -783,7 +797,7 @@ void addButton(const char* id) {
         	PlayLayer::get(),
 			menu_selector(mobileButtons::disableFrameStepper)
     	);
-		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(45, 35));
+		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(70, 35));
 		btn->setID(id);
 		btn->setZOrder(100);
 		buttonsMenu->addChild(btn);
@@ -840,10 +854,9 @@ class $modify(GJBaseGameLayer) {
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else if (recorder.state == state::playing) {
-			if (androidAction != nullptr) {
 				if (!androidAction->posOnly)
 					GJBaseGameLayer::handleButton(holding,button,player1);
-
+			if (androidAction != nullptr) {
 			if (androidAction->p1.xPos != 0) {
 				if (!areEqual(this->m_player1->getPositionX(), androidAction->p1.xPos) ||
 				!areEqual(this->m_player1->getPositionY(), androidAction->p1.yPos))
@@ -974,7 +987,18 @@ class $modify(GJBaseGameLayer) {
 				buttonsMenu = nullptr;
 			}
 		}
-		
+		if (recorder.state == state::playing) {
+			if (stateLabel != nullptr) {
+				if (stateLabel->getString() != "Playing" && Mod::get()->getSettingValue<bool>("show_playing_label"))
+					stateLabel->setString("Playing");
+				else if (!Mod::get()->getSettingValue<bool>("show_playing_label")) {
+					stateLabel->removeFromParent();
+					stateLabel = nullptr;
+				}
+			} else if (Mod::get()->getSettingValue<bool>("show_playing_label")) {
+				addLabel("Playing");
+			}
+		}
 		if (recorder.state == state::recording) {
 			if (isAndroid) {
 			if (buttonsMenu != nullptr) {
@@ -1022,16 +1046,7 @@ class $modify(GJBaseGameLayer) {
 			}
 			}
 			}
-if (stateLabel != nullptr) {
-				if (stateLabel->getString() != "Playing" && Mod::get()->getSettingValue<bool>("show_playing_label"))
-					stateLabel->setString("Playing");
-				else if (!Mod::get()->getSettingValue<bool>("show_playing_label")) {
-					stateLabel->removeFromParent();
-					stateLabel = nullptr;
-				}
-			} else if (Mod::get()->getSettingValue<bool>("show_playing_label")) {
-				addLabel("Playing");
-			}
+
 			if (stateLabel != nullptr) {
 				if (stateLabel->getString() != "Recording" && Mod::get()->getSettingValue<bool>("show_recording_label"))
 					stateLabel->setString("Recording");
@@ -1051,7 +1066,39 @@ if (stateLabel != nullptr) {
 				recorder.syncMusic();
 			} else GJBaseGameLayer::update(dt);
 		} else GJBaseGameLayer::update(dt);
-		
+
+		if (recorder.state == state::recording) {
+		if (((playerHolding && !Mod::get()->getSettingValue<bool>("vanilla")) ||
+		Mod::get()->getSettingValue<bool>("frame_fix")) && !recorder.macro.empty()) {
+			
+			if (!(recorder.macro.back().frame == recorder.currentFrame() &&
+			(recorder.macro.back().posOnly || recorder.macro.back().p1.xPos != 0))) {
+				playerData p1 = {
+					this->m_player1->getPositionX(),
+					this->m_player1->getPositionY(),
+					this->m_player1->m_isUpsideDown,
+					-80085,
+					-80085,
+					-80085
+				};
+				playerData p2;
+				if (this->m_player2 != nullptr) {
+					p2 = {
+					this->m_player2->getPositionX(),
+					this->m_player2->getPositionY(),
+					this->m_player2->m_isUpsideDown,
+					-80085,
+					-80085,
+					-80085
+					};
+				} else {
+					p2.xPos = 0;
+				}
+				recorder.macro.push_back({true,recorder.currentFrame(),1,true,true,p1,p2});
+			}
+		}
+	}
+
 if (recorder.state == state::playing && isAndroid) {
 			int frame = recorder.currentFrame();
         	while (recorder.currentAction < static_cast<int>(recorder.macro.size()) &&
@@ -1077,37 +1124,6 @@ if (recorder.state == state::playing && isAndroid) {
 
 void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 	reinterpret_cast<void(__thiscall *)(GJBaseGameLayer *)>(base::get() + 0x1BD240)(self);
-	if (recorder.state == state::recording) {
-		if (((playerHolding && !Mod::get()->getSettingValue<bool>("vanilla")) ||
-		Mod::get()->getSettingValue<bool>("frame_fix")) && !recorder.macro.empty()) {
-			
-			if (!(recorder.macro.back().frame == recorder.currentFrame() &&
-			(recorder.macro.back().posOnly || recorder.macro.back().p1.xPos != 0))) {
-				playerData p1 = {
-					self->m_player1->getPositionX(),
-					self->m_player1->getPositionY(),
-					self->m_player1->m_isUpsideDown,
-					-80085,
-					-80085,
-					-80085
-				};
-				playerData p2;
-				if (self->m_player2 != nullptr) {
-					p2 = {
-					self->m_player2->getPositionX(),
-					self->m_player2->getPositionY(),
-					self->m_player2->m_isUpsideDown,
-					-80085,
-					-80085,
-					-80085
-					};
-				} else {
-					p2.xPos = 0;
-				}
-				recorder.macro.push_back({true,recorder.currentFrame(),1,true,true,p1,p2});
-			}
-		}
-	}
 
 	if (recorder.state == state::playing) {
 			int frame = recorder.currentFrame();
