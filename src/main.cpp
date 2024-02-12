@@ -439,9 +439,9 @@ void saveMacroPopup::saveMacro(CCObject*) {
     file.imbue(utf8_locale);
 
 	if (file.is_open()) {
-		if (isAndroid) {
-			file << "android\n";
-		}
+
+		file << recorder.fps;
+
 		for (auto &action : recorder.macro) {
 			file << action.frame << "|" << action.holding <<
 			"|" << action.button << "|" << action.player1 <<
