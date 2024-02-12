@@ -841,10 +841,10 @@ class $modify(GJBaseGameLayer) {
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else if (recorder.state == state::playing) {
 			if (androidAction != nullptr) {
-			if (androidAction->p1.xPos != 0) {
 				if (!androidAction->posOnly)
 					GJBaseGameLayer::handleButton(holding,button,player1);
 
+			if (androidAction->p1.xPos != 0) {
 				if (!areEqual(this->m_player1->getPositionX(), androidAction->p1.xPos) ||
 				!areEqual(this->m_player1->getPositionY(), androidAction->p1.yPos))
 					this->m_player1->setPosition(cocos2d::CCPoint(androidAction->p1.xPos, androidAction->p1.yPos));
