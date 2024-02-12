@@ -137,6 +137,7 @@ enum state {
 class recordSystem {
 public:
 	bool android = false;
+	int fps = 0;
     state state = off;
  	size_t currentAction = 0;
    	std::vector<data> macro;
@@ -345,7 +346,7 @@ public:
 		infoText << "\nDuration: " << (!recorder.macro.empty() 
 		? recorder.macro.back().frame / fixedFps : 0) << "s";
 
-		infoText << "\nPlatform: " << ((recorder.android) ? "Android" : "PC");
+		infoText << "\nFPS: " << (recorder.fps);
 
     	infoMacro->setString(infoText.str().c_str());
 	}
@@ -365,6 +366,9 @@ public:
     		recorder.state = (recorder.state == state::recording) 
 			? state::off : state::recording;
 			if (recorder.state == state::recording) {
+				if (recorder.macro.empty())
+					recorder.fps = Mod::get()->getSettingValue<int64_t>("bot_fps");
+				
 				restart = true;
 				updateInfo();
 			} else if (recorder.state == state::off) {
@@ -543,11 +547,19 @@ void macroCell::handleLoad(CCObject* btn) {
 			}
 		} else if (count < 1) {
 			std::wstring andStr;
+			int fps;
 			if (firstIt) {
-    			if (isSS >> andStr && andStr == L"android") {
+    			if (isSS >> fps) {
 					andr = true;
-        			recorder.android = true;
-				}
+					recorder.fps = (int)fps;
+    			} else {
+        			isSS.clear();
+        			if (isSS >> andStr && andStr == L"android") {
+            			andr = true;
+            			recorder.android = true;
+						recorder.fps = 60;
+        			}
+    			}
 			}
 		} else {
 			if (isSS >> frame >> s >> holding >> s >> button >> 
@@ -558,9 +570,13 @@ void macroCell::handleLoad(CCObject* btn) {
 		}
     	firstIt = false;
 	}
-	if (!andr)
+	if (!andr) {
 		recorder.android = false;
+		recorder.fps = 240;
+	}
 
+	Mod::get()->setSettingValue("bot_fps", recorder.fps);
+	
 	CCArray* children = CCDirector::sharedDirector()->getRunningScene()->getChildren();
 	CCObject* child;
 	CCARRAY_FOREACH(children, child) {
@@ -712,7 +728,8 @@ public:
         		PlayLayer::get(),
 				menu_selector(mobileButtons::disableFrameStepper)
     			);
-				btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(45, 35));
+				btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(70, 35));
+				btn->setZOrder(100);
 				btn->setID("disable_fs_btn");
 				buttonsMenu->addChild(btn);
 				disableFSBtn = btn;
@@ -854,8 +871,7 @@ class $modify(GJBaseGameLayer) {
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else if (recorder.state == state::playing) {
-				if (!androidAction->posOnly)
-					GJBaseGameLayer::handleButton(holding,button,player1);
+			GJBaseGameLayer::handleButton(holding,button,player1);
 			if (androidAction != nullptr) {
 			if (androidAction->p1.xPos != 0) {
 				if (!areEqual(this->m_player1->getPositionX(), androidAction->p1.xPos) ||
@@ -1066,39 +1082,7 @@ class $modify(GJBaseGameLayer) {
 				recorder.syncMusic();
 			} else GJBaseGameLayer::update(dt);
 		} else GJBaseGameLayer::update(dt);
-
-		if (recorder.state == state::recording) {
-		if (((playerHolding && !Mod::get()->getSettingValue<bool>("vanilla")) ||
-		Mod::get()->getSettingValue<bool>("frame_fix")) && !recorder.macro.empty()) {
-			
-			if (!(recorder.macro.back().frame == recorder.currentFrame() &&
-			(recorder.macro.back().posOnly || recorder.macro.back().p1.xPos != 0))) {
-				playerData p1 = {
-					this->m_player1->getPositionX(),
-					this->m_player1->getPositionY(),
-					this->m_player1->m_isUpsideDown,
-					-80085,
-					-80085,
-					-80085
-				};
-				playerData p2;
-				if (this->m_player2 != nullptr) {
-					p2 = {
-					this->m_player2->getPositionX(),
-					this->m_player2->getPositionY(),
-					this->m_player2->m_isUpsideDown,
-					-80085,
-					-80085,
-					-80085
-					};
-				} else {
-					p2.xPos = 0;
-				}
-				recorder.macro.push_back({true,recorder.currentFrame(),1,true,true,p1,p2});
-			}
-		}
-	}
-
+		
 if (recorder.state == state::playing && isAndroid) {
 			int frame = recorder.currentFrame();
         	while (recorder.currentAction < static_cast<int>(recorder.macro.size()) &&
@@ -1107,9 +1091,10 @@ if (recorder.state == state::playing && isAndroid) {
             	auto& currentActionIndex = recorder.macro[recorder.currentAction];
 				androidAction = &currentActionIndex;
 				
-				cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
-				static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)][currentActionIndex.button-1]),
-				currentActionIndex.holding, false);
+				if (!currentActionIndex.posOnly)
+					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
+					static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)][currentActionIndex.button-1]),
+					currentActionIndex.holding, false);
 
             	recorder.currentAction++;
         	}
@@ -1124,6 +1109,37 @@ if (recorder.state == state::playing && isAndroid) {
 
 void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 	reinterpret_cast<void(__thiscall *)(GJBaseGameLayer *)>(base::get() + 0x1BD240)(self);
+	if (recorder.state == state::recording) {
+		if (((playerHolding && !Mod::get()->getSettingValue<bool>("vanilla")) ||
+		Mod::get()->getSettingValue<bool>("frame_fix")) && !recorder.macro.empty()) {
+			
+			if (!(recorder.macro.back().frame == recorder.currentFrame() &&
+			(recorder.macro.back().posOnly || recorder.macro.back().p1.xPos != 0))) {
+				playerData p1 = {
+					self->m_player1->getPositionX(),
+					self->m_player1->getPositionY(),
+					self->m_player1->m_isUpsideDown,
+					-80085,
+					-80085,
+					-80085
+				};
+				playerData p2;
+				if (self->m_player2 != nullptr) {
+					p2 = {
+					self->m_player2->getPositionX(),
+					self->m_player2->getPositionY(),
+					self->m_player2->m_isUpsideDown,
+					-80085,
+					-80085,
+					-80085
+					};
+				} else {
+					p2.xPos = 0;
+				}
+				recorder.macro.push_back({true,recorder.currentFrame(),1,true,true,p1,p2});
+			}
+		}
+	}
 
 	if (recorder.state == state::playing) {
 			int frame = recorder.currentFrame();
@@ -1246,7 +1262,10 @@ class $modify(PlayLayer) {
 				} catch (const std::exception& e) {
 					log::debug("wtfffff? - {}",e);
 				}
-        	} else if (!recorder.macro.empty()) recorder.macro.clear();
+        	} else if (!recorder.macro.empty()) {
+				recorder.fps = Mod::get()->getSettingValue<int64_t>("bot_fps");
+				recorder.macro.clear();
+			} 
    		}
 	}
 
@@ -1384,6 +1403,8 @@ $execute {
         	offset = 0x3B8;
     	}
 	}
+
+	recorder.fps = Mod::get()->getSettingValue<int64_t>("bot_fps");
 
 	for (std::size_t i = 0; i < 15; i++) {
 		safeMode::patches[i] = Mod::get()->patch(reinterpret_cast<void*>(base::get() + std::get<0>(safeMode::codes[i])),
