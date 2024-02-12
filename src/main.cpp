@@ -143,7 +143,8 @@ public:
    	std::vector<data> macro;
 
 	int currentFrame() {
-		return static_cast<int>((*(double*)(((char*)PlayLayer::get()) + offset)) * fps);
+		int fps2 = (android) ? 240 : fps;
+		return static_cast<int>((*(double*)(((char*)PlayLayer::get()) + offset)) * fps2);
 	}
 	void syncMusic() {
 		FMODAudioEngine::sharedEngine()->setMusicTimeMS(
@@ -175,7 +176,7 @@ class RecordLayer : public geode::Popup<std::string const&> {
 protected:
     bool setup(std::string const& value) override {
         auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
-		auto versionLabel = CCLabelBMFont::create("xdBot v1.4.1 - made by Zilko", "chatFont.fnt");
+		auto versionLabel = CCLabelBMFont::create("xdBot v1.4.2 - made by Zilko", "chatFont.fnt");
 		versionLabel->setOpacity(60);
 		versionLabel->setAnchorPoint(ccp(0.0f,0.5f));
 		versionLabel->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(3, 6));
@@ -551,6 +552,7 @@ void macroCell::handleLoad(CCObject* btn) {
 			if (firstIt) {
     			if (isSS >> fps) {
 					andr = true;
+					recorder.android = false;
 					recorder.fps = (int)fps;
     			} else {
         			isSS.clear();
