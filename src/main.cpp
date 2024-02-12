@@ -143,7 +143,7 @@ public:
    	std::vector<data> macro;
 
 	int currentFrame() {
-		return static_cast<int>((*(double*)(((char*)PlayLayer::get()) + offset)) * fixedFps);
+		return static_cast<int>((*(double*)(((char*)PlayLayer::get()) + offset)) * fps);
 	}
 	void syncMusic() {
 		FMODAudioEngine::sharedEngine()->setMusicTimeMS(
@@ -1076,8 +1076,7 @@ class $modify(GJBaseGameLayer) {
 			if (Mod::get()->getSettingValue<bool>("frame_stepper") && stepFrame == false) 
 				return;
 			else if (stepFrame) {
-				int fps = (isAndroid) ? androidFps : fixedFps;
-				GJBaseGameLayer::update(1.f/fps);
+				GJBaseGameLayer::update(1.f/ recorder.fps);
 				stepFrame = false;
 				recorder.syncMusic();
 			} else GJBaseGameLayer::update(dt);
