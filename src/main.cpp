@@ -136,7 +136,7 @@ enum state {
 
 class recordSystem {
 public:
-	bool android = isAndroid;
+	bool android = false;
     state state = off;
  	size_t currentAction = 0;
    	std::vector<data> macro;
@@ -285,7 +285,7 @@ protected:
 
 		infoMacro = CCLabelBMFont::create("", "chatFont.fnt");
     	infoMacro->setAnchorPoint({0, 1});
-    	infoMacro->setPosition(topLeftCorner + ccp(21, -45));
+    	infoMacro->setPosition(topLeftCorner + ccp(21, -25));
 		updateInfo();
     	m_mainLayer->addChild(infoMacro);
 
@@ -337,7 +337,7 @@ public:
 		}
 		
  		std::stringstream infoText;
-		
+
     	infoText << "\nSize: " << recorder.macro.size();
 		
 		infoText << "\nClicks: " << clicksCount;
@@ -558,7 +558,7 @@ void macroCell::handleLoad(CCObject* btn) {
 		}
     	firstIt = false;
 	}
-	if (!andr && !recorder.android)
+	if (!andr)
 		recorder.android = false;
 
 	CCArray* children = CCDirector::sharedDirector()->getRunningScene()->getChildren();
@@ -751,6 +751,7 @@ void addButton(const char* id) {
     	);
 		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(15, 35));
 		btn->setID(id);
+		btn->setZOrder(100);
 		buttonsMenu->addChild(btn);
 		advanceFrameBtn = btn;
 	} else if (id == "speedhack_btn") {
@@ -768,6 +769,7 @@ void addButton(const char* id) {
     	);
 		btn->setPosition(winSize/2 + ccp(winSize.width/2, -winSize.height/2) + ccp(-15, 35));
 		btn->setID(id);
+		btn->setZOrder(100);
 		buttonsMenu->addChild(btn);
 		speedhackBtn = btn;
 	} else if (id == "disable_fs_btn") {
@@ -781,6 +783,7 @@ void addButton(const char* id) {
     	);
 		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(45, 35));
 		btn->setID(id);
+		btn->setZOrder(100);
 		buttonsMenu->addChild(btn);
 		disableFSBtn = btn;
 	}
@@ -800,6 +803,7 @@ void addLabel(const char* text) {
 		frameLabel = label;
 		label->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(6, 12));
 	}
+	label->setZOrder(100);
 	PlayLayer::get()->addChild(label);
 }
 
@@ -835,18 +839,26 @@ class $modify(GJBaseGameLayer) {
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else if (recorder.state == state::playing) {
 			if (androidAction != nullptr) {
-			if (!androidAction->posOnly && androidAction->p1.xPos != 0) {
-						if (!areEqual(this->m_player1->getPositionX(), androidAction->p1.xPos) ||
-						!areEqual(this->m_player1->getPositionY(), androidAction->p1.yPos))
-								this->m_player1->setPosition(cocos2d::CCPoint(androidAction->p1.xPos, androidAction->p1.yPos));
+			if (androidAction->p1.xPos != 0) {
+				if (!androidAction->posOnly)
+					GJBaseGameLayer::handleButton(holding,button,player1);
+
+				if (!areEqual(this->m_player1->getPositionX(), androidAction->p1.xPos) ||
+				!areEqual(this->m_player1->getPositionY(), androidAction->p1.yPos))
+					this->m_player1->setPosition(cocos2d::CCPoint(androidAction->p1.xPos, androidAction->p1.yPos));
 					
-						if (androidAction->p2.xPos != 0 && this->m_player2 != nullptr) {
-							if (!areEqual(this->m_player2->getPositionX(), androidAction->p2.xPos) ||
-							!areEqual(this->m_player2->getPositionY(), androidAction->p2.yPos))
-								this->m_player2->setPosition(cocos2d::CCPoint(androidAction->p2.xPos, androidAction->p2.yPos));
-						}
-						GJBaseGameLayer::handleButton(holding,button,player1);
+				if (this->m_player1->m_isUpsideDown != androidAction->p1.upsideDown && androidAction->posOnly)
+					this->m_player1->flipGravity(androidAction->p1.upsideDown, true);
+
+				if (androidAction->p2.xPos != 0 && this->m_player2 != nullptr) {
+					if (!areEqual(this->m_player2->getPositionX(), androidAction->p2.xPos) ||
+					!areEqual(this->m_player2->getPositionY(), androidAction->p2.yPos))
+						this->m_player2->setPosition(cocos2d::CCPoint(androidAction->p2.xPos, androidAction->p2.yPos));
+
+					if (this->m_player2->m_isUpsideDown != androidAction->p2.upsideDown && androidAction->posOnly)
+						this->m_player2->flipGravity(androidAction->p2.upsideDown, true);
 				}
+			}
 		}
 		} else GJBaseGameLayer::handleButton(holding,button,player1);
 
@@ -996,7 +1008,16 @@ class $modify(GJBaseGameLayer) {
 			}
 			}
 			}
-
+if (stateLabel != nullptr) {
+				if (stateLabel->getString() != "Playing" && Mod::get()->getSettingValue<bool>("show_playing_label"))
+					stateLabel->setString("Playing");
+				else if (!Mod::get()->getSettingValue<bool>("show_playing_label")) {
+					stateLabel->removeFromParent();
+					stateLabel = nullptr;
+				}
+			} else if (Mod::get()->getSettingValue<bool>("show_playing_label")) {
+				addLabel("Playing");
+			}
 			if (stateLabel != nullptr) {
 				if (stateLabel->getString() != "Recording" && Mod::get()->getSettingValue<bool>("show_recording_label"))
 					stateLabel->setString("Recording");
@@ -1018,25 +1039,16 @@ class $modify(GJBaseGameLayer) {
 		} else GJBaseGameLayer::update(dt);
 		
 if (recorder.state == state::playing && isAndroid) {
-			if (stateLabel != nullptr) {
-				if (stateLabel->getString() != "Playing" && Mod::get()->getSettingValue<bool>("show_playing_label"))
-					stateLabel->setString("Playing");
-				else if (!Mod::get()->getSettingValue<bool>("show_playing_label")) {
-					stateLabel->removeFromParent();
-					stateLabel = nullptr;
-				}
-			} else if (Mod::get()->getSettingValue<bool>("show_playing_label")) {
-				addLabel("Playing");
-			}
 			int frame = recorder.currentFrame();
         	while (recorder.currentAction < static_cast<int>(recorder.macro.size()) &&
 			frame >= recorder.macro[recorder.currentAction].frame && !this->m_player1->m_isDead) {
+
             	auto& currentActionIndex = recorder.macro[recorder.currentAction];
 				androidAction = &currentActionIndex;
-				if (!currentActionIndex.posOnly)
-					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
-					static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)][currentActionIndex.button-1]),
-					currentActionIndex.holding, false);
+				
+				cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
+				static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)][currentActionIndex.button-1]),
+				currentActionIndex.holding, false);
 
             	recorder.currentAction++;
         	}
@@ -1108,7 +1120,7 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 								self->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
 
 							if (self->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
-								self->m_player2->flipGravity(currentActionIndex.p1.upsideDown, true);
+								self->m_player2->flipGravity(currentActionIndex.p2.upsideDown, true);
 
 						}
 				} else {
@@ -1130,7 +1142,7 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 								self->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
 
 							if (self->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
-								self->m_player2->flipGravity(currentActionIndex.p1.upsideDown, true);
+								self->m_player2->flipGravity(currentActionIndex.p2.upsideDown, true);
 
 						}
 					}
@@ -1337,6 +1349,7 @@ $execute {
 	if (!isAndroid)
 		Mod::get()->hook(reinterpret_cast<void *>(base::get() + 0x1BD240), &GJBaseGameLayerProcessCommands, "GJBaseGameLayer::processCommands", tulip::hook::TulipConvention::Thiscall);
 	else {
+		recorder.android = true;
 		if (sizeof(void*) == 8) {
         	offset = 0x3B8;
     	}
