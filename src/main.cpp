@@ -646,8 +646,6 @@ void clearState(bool safeMode) {
 	androidAction = nullptr;
 	leftOver = 0.f;
 
-	if (isAndroid && recorder.state == state::off) releaseKeys();
-
 	if (PlayLayer::get()) {
 		CCArray* children = PlayLayer::get()->getChildren();
 		CCObject* child;
@@ -1229,6 +1227,8 @@ class $modify(PlayLayer) {
 		playerHolding = false;
 		leftOver = 0.f;
 
+
+
 		if (isAndroid) androidAction = nullptr;
 
 		if (safeModeEnabled && !isAndroid) {
@@ -1243,6 +1243,7 @@ class $modify(PlayLayer) {
         	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
         	channel->setPitch(1);
 		} else if (recorder.state != state::off) {
+releaseKeys();
         	if (this->m_isPracticeMode && !recorder.macro.empty() && recorder.currentFrame() != 0) {
   				int frame = recorder.currentFrame(); 
 				try {
