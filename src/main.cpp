@@ -246,6 +246,12 @@ protected:
     	label->setAnchorPoint({0, 0.5});
     	m_mainLayer->addChild(label);
 
+label = CCLabelBMFont::create("FPS", "bigFont.fnt");
+    	label->setScale(0.7f);
+    	label->setPosition(topLeftCorner + ccp(150, -120)); 
+    	label->setAnchorPoint({0, 0.5});
+    	m_mainLayer->addChild(label);
+
      	playing = CCMenuItemToggler::create(checkOffSprite, checkOnSprite,
 	 	this,
 	 	menu_selector(RecordLayer::togglePlay));
@@ -287,7 +293,7 @@ protected:
 
 		infoMacro = CCLabelBMFont::create("", "chatFont.fnt");
     	infoMacro->setAnchorPoint({0, 1});
-    	infoMacro->setPosition(topLeftCorner + ccp(21, -25));
+    	infoMacro->setPosition(topLeftCorner + ccp(34, -44));
 		updateInfo();
     	m_mainLayer->addChild(infoMacro);
 
@@ -340,7 +346,7 @@ public:
 		
  		std::stringstream infoText;
 
-    	infoText << "\nSize: " << recorder.macro.size();
+		infoText << "Current Macro:";
 		
 		infoText << "\nClicks: " << clicksCount;
 
@@ -441,7 +447,7 @@ void saveMacroPopup::saveMacro(CCObject*) {
 
 	if (file.is_open()) {
 
-		file << recorder.fps;
+		file << recorder.fps << "\n";
 
 		for (auto &action : recorder.macro) {
 			file << action.frame << "|" << action.holding <<
@@ -615,6 +621,7 @@ void clearState(bool safeMode) {
 	recorder.state = state::off;
 
 	if (isAndroid) {
+		releaseKeys();
 		if (disableFSBtn != nullptr) {
 			disableFSBtn->removeFromParent();
 			disableFSBtn = nullptr;
@@ -639,7 +646,7 @@ void clearState(bool safeMode) {
 	androidAction = nullptr;
 	leftOver = 0.f;
 
-	if (isAndroid) releaseKeys();
+	if (isAndroid && recorder.state == state::off) releaseKeys();
 
 	if (PlayLayer::get()) {
 		CCArray* children = PlayLayer::get()->getChildren();
@@ -1222,10 +1229,7 @@ class $modify(PlayLayer) {
 		playerHolding = false;
 		leftOver = 0.f;
 
-		if (isAndroid) {
-			androidAction = nullptr;
-			releaseKeys();
-		}
+		if (isAndroid) androidAction = nullptr;
 
 		if (safeModeEnabled && !isAndroid) {
 			safeModeEnabled = false;
@@ -1390,7 +1394,6 @@ $execute {
 	if (!isAndroid)
 		Mod::get()->hook(reinterpret_cast<void *>(base::get() + 0x1BD240), &GJBaseGameLayerProcessCommands, "GJBaseGameLayer::processCommands", tulip::hook::TulipConvention::Thiscall);
 	else {
-		recorder.android = true;
 		if (sizeof(void*) == 8) {
         	offset = 0x3B8;
     	}
