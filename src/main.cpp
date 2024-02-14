@@ -17,6 +17,7 @@ double prevSpeed = 1.0f;
 
 int fixedFps = 240;
 int androidFps = 60;
+int fpsIndex = 0;
 
 #ifdef GEODE_IS_ANDROID
 	int offset = 0x320;
@@ -36,6 +37,8 @@ int playerEnums[2][3] = {
     {cocos2d::enumKeyCodes::KEY_ArrowUp, cocos2d::enumKeyCodes::KEY_ArrowLeft, cocos2d::enumKeyCodes::KEY_ArrowRight}, 
     {cocos2d::enumKeyCodes::KEY_W, cocos2d::enumKeyCodes::KEY_A, cocos2d::enumKeyCodes::KEY_D}
 };
+
+int fpsArr[4] = {60,120,180,240};
 
 void releaseKeys() {
 	for (int row = 0; row < 2; ++row) {
@@ -170,6 +173,7 @@ public:
 recordSystem recorder;
 
 class RecordLayer : public geode::Popup<std::string const&> {
+CCLabelBMFont* fpsLabel = nullptr;
  	CCLabelBMFont* infoMacro = nullptr;
  	CCMenuItemToggler* recording = nullptr;
     CCMenuItemToggler* playing = nullptr;
@@ -239,6 +243,17 @@ protected:
     	btn->setPosition(topLeftCorner + ccp(290, -10));
     	menu->addChild(btn);
 		}
+label = CCLabelBMFont::create("FPS", "bigFont.fnt");
+    	label->setScale(0.7f);
+    	label->setPosition(topLeftCorner + ccp(130, -120)); 
+    	label->setAnchorPoint({0, 0.5});
+    	m_mainLayer->addChild(label);
+
+fpsLabel = CCLabelBMFont::create((recorder.fps).str().c_str(), "bigFont.fnt");
+    	label->setScale(0.7f);
+    	label->setPosition(topLeftCorner + ccp(150, -120)); 
+    	label->setAnchorPoint({0, 0.5});
+    	m_mainLayer->addChild(label);
 
     	label = CCLabelBMFont::create("Play", "bigFont.fnt");
     	label->setScale(0.7f);
@@ -246,11 +261,7 @@ protected:
     	label->setAnchorPoint({0, 0.5});
     	m_mainLayer->addChild(label);
 
-label = CCLabelBMFont::create("FPS", "bigFont.fnt");
-    	label->setScale(0.7f);
-    	label->setPosition(topLeftCorner + ccp(150, -120)); 
-    	label->setAnchorPoint({0, 0.5});
-    	m_mainLayer->addChild(label);
+
 
      	playing = CCMenuItemToggler::create(checkOffSprite, checkOnSprite,
 	 	this,
@@ -1387,6 +1398,12 @@ class $modify(CCKeyboardDispatcher) {
 };
 
 $execute {
+if (Mod::get()->getSavedValue<float>("prev_fps"))
+fpsIndex = Mod::get()->getSavedValue<float>("prev_fps");
+else if (isAndroid)
+fpsIndex = 0;
+else fpsIndex = 3;
+
 	if (Mod::get()->getSavedValue<float>("previous_speed"))
 		prevSpeed = Mod::get()->getSavedValue<float>("previous_speed");
 	else
