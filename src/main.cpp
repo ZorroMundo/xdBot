@@ -716,8 +716,15 @@ class $modify(PauseLayer) {
 	void customSetup() {
 		PauseLayer::customSetup();
 		auto winSize = CCDirector::sharedDirector()->getWinSize();
-        auto sprite = CCSprite::createWithSpriteFrameName("GJ_playBtn2_001.png");
-		sprite->setScale(0.35f);
+		CCSprite* sprite = nullptr;
+		
+		if (Loader::get()->isModLoaded("tpdea.betterpause-Better")) {
+			sprite = CCSprite::createWithSpriteFrameName("GJ_stopEditorBtn_001.png");
+		} else {
+ 			sprite = CCSprite::createWithSpriteFrameName("GJ_playBtn2_001.png");
+			sprite->setScale(0.35f);
+		}
+       
 
         auto btn = CCMenuItemSpriteExtra::create(sprite,
 		this,
@@ -770,6 +777,9 @@ public:
 		else {
 			Mod::get()->setSettingValue("frame_stepper", true);
 			if (disableFSBtn == nullptr)  {
+				int y = 35;
+				if (PlayLayer::get()->m_levelSettings->m_platformerMode) y = 95;
+
 				auto winSize = CCDirector::sharedDirector()->getWinSize();
 				CCSprite* spr = nullptr;
 				CCMenuItemSpriteExtra* btn = nullptr;
@@ -781,7 +791,7 @@ public:
         		PlayLayer::get(),
 				menu_selector(mobileButtons::disableFrameStepper)
     			);
-				btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(70, 70));
+				btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(70, y));
 				btn->setZOrder(100);
 				btn->setID("disable_fs_btn");
 				buttonsMenu->addChild(btn);
@@ -820,6 +830,10 @@ void addButton(const char* id) {
 	auto winSize = CCDirector::sharedDirector()->getWinSize();
 	CCSprite* spr = nullptr;
 	CCMenuItemSpriteExtra* btn = nullptr;
+
+	int y = 35;
+	if (PlayLayer::get()->m_levelSettings->m_platformerMode) y = 95;
+		
 	if (id == "advance_frame_btn") {
 		spr = CCSprite::createWithSpriteFrameName("GJ_plainBtn_001.png");
         spr->setScale(0.65f);
@@ -835,7 +849,7 @@ void addButton(const char* id) {
         	PlayLayer::get(),
 			menu_selector(mobileButtons::frameAdvance)
     	);
-		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(15, 35));
+		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(15, 7));
 		btn->setID(id);
 		btn->setZOrder(100);
 		buttonsMenu->addChild(btn);
@@ -853,7 +867,7 @@ void addButton(const char* id) {
         	PlayLayer::get(),
 			menu_selector(mobileButtons::toggleSpeedhack)
     	);
-		btn->setPosition(winSize/2 + ccp(winSize.width/2, -winSize.height/2) + ccp(-15, 70));
+		btn->setPosition(winSize/2 + ccp(winSize.width/2, -winSize.height/2) + ccp(-15, 35));
 		btn->setID(id);
 		btn->setZOrder(100);
 		buttonsMenu->addChild(btn);
@@ -867,7 +881,7 @@ void addButton(const char* id) {
         	PlayLayer::get(),
 			menu_selector(mobileButtons::disableFrameStepper)
     	);
-		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(70, 70));
+		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(70, y));
 		btn->setID(id);
 		btn->setZOrder(100);
 		buttonsMenu->addChild(btn);
@@ -1434,7 +1448,7 @@ class $modify(CCKeyboardDispatcher) {
 
 $execute {
 	if (Mod::get()->getSavedValue<float>("previous_fps"))
-		fpsIndex = Mod::get()->getSavedValue<float>("prev_fps");
+		fpsIndex = Mod::get()->getSavedValue<float>("previous_fps");
 	else if (isAndroid)
 		fpsIndex = 0;
 	else {
