@@ -911,9 +911,7 @@ void addLabel(const char* text) {
 
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
-		if (!isAndroid) {
 if ((recorder.state == state::playing && playingAction) || recorder.state != state::playing) GJBaseGameLayer::handleButton(holding,button,player1);
-}
 		if (isAndroid) {
 			if (recorder.state == state::recording) {
 			GJBaseGameLayer::handleButton(holding,button,player1);
