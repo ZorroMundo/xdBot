@@ -911,9 +911,12 @@ void addLabel(const char* text) {
 
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
+		if (!isAndroid) {
 if ((recorder.state == state::playing && playingAction) || recorder.state != state::playing) GJBaseGameLayer::handleButton(holding,button,player1);
+}
 		if (isAndroid) {
 			if (recorder.state == state::recording) {
+			GJBaseGameLayer::handleButton(holding,button,player1);
 			playerData p1;
 			playerData p2;
 				p1 = {
@@ -938,7 +941,8 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 			}
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
-		} else if (recorder.state == state::playing && playingAction) {
+		} else if (recorder.state == state::playing) {
+			GJBaseGameLayer::handleButton(holding,button,player1);
 			if (androidAction != nullptr) {
 			if (androidAction->p1.xPos != 0) {
 				if (!areEqual(this->m_player1->getPositionX(), androidAction->p1.xPos) ||
@@ -953,7 +957,7 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 				}
 			}
 		}
-		} 
+		} else if (recorder.state != state::playing) GJBaseGameLayer::handleButton(holding,button,player1);
 
 	} else if (recorder.state == state::recording) {
 			playerData p1;
@@ -1163,7 +1167,7 @@ if (recorder.state == state::playing && isAndroid) {
 				cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
 					static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)][currentActionIndex.button-1]),
 					currentActionIndex.holding, false);
-				}
+}
             	recorder.currentAction++;
         	}
 playingAction = false;
