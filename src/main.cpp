@@ -940,7 +940,6 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else if (recorder.state == state::playing && playingAction) {
-			GJBaseGameLayer::handleButton(holding,button,player1);
 			if (androidAction != nullptr) {
 			if (androidAction->p1.xPos != 0) {
 				if (!areEqual(this->m_player1->getPositionX(), androidAction->p1.xPos) ||
@@ -955,7 +954,7 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 				}
 			}
 		}
-		} else if (recorder.state != state::playing) GJBaseGameLayer::handleButton(holding,button,player1);
+		} 
 
 	} else if (recorder.state == state::recording) {
 			playerData p1;
