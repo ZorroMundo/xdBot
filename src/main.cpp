@@ -30,6 +30,7 @@ bool restart = false;
 bool stepFrame = false;
 bool playerHolding = false;
 bool lastHold = false;
+bool playingAction = false;
 bool shouldPlay = false;
 bool shouldPlay2 = false;
 
@@ -158,11 +159,8 @@ public:
 	}
 	void recordAction(bool holding, int button, bool player1, int frame, GJBaseGameLayer* bgl, playerData p1Data, playerData p2Data) {
 		bool realp1;
-		if (isAndroid) {
+		if (isAndroid) 
 			realp1 = (GameManager::get()->getGameVariable("0010") && !bgl->m_levelSettings->m_platformerMode) ? !player1 : player1;
-			if (!android)
-				android = true;
-		}
 		else realp1 = player1;
 		
     	macro.push_back({realp1, frame, button, holding, false, p1Data, p2Data});
@@ -180,7 +178,7 @@ CCLabelBMFont* fpsLabel = nullptr;
 protected:
     bool setup(std::string const& value) override {
         auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
-		auto versionLabel = CCLabelBMFont::create("xdBot v1.4.3 - made by Zilko", "chatFont.fnt");
+		auto versionLabel = CCLabelBMFont::create("xdBot v1.4.4 - made by Zilko", "chatFont.fnt");
 		versionLabel->setOpacity(60);
 		versionLabel->setAnchorPoint(ccp(0.0f,0.5f));
 		versionLabel->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(3, 6));
@@ -421,9 +419,11 @@ public:
     		recorder.state = (recorder.state == state::recording) 
 			? state::off : state::recording;
 			if (recorder.state == state::recording) {
-				if (recorder.macro.empty())
+				if (recorder.macro.empty()) {
+					recorder.android = false;
 					recorder.fps = fpsArr[fpsIndex];
-				
+				}
+					
 				restart = true;
 				updateInfo();
 			} else if (recorder.state == state::off) {
@@ -520,7 +520,7 @@ void saveMacroPopup::saveMacro(CCObject*) {
 		}
         FLAlertLayer::create(
     	"Save Macro",   
-    	"Macro saved <cg>succesfully</c>.",  
+    	"Macro saved <cg>successfully</c>.",  
     	"OK"      
 		)->show();
 	} else {
@@ -666,8 +666,8 @@ void clearState(bool safeMode) {
 	channel->setPitch(1);
 	recorder.state = state::off;
 
+playingAction = false;
 	if (isAndroid) {
-		releaseKeys();
 		if (disableFSBtn != nullptr) {
 			disableFSBtn->removeFromParent();
 			disableFSBtn = nullptr;
@@ -685,6 +685,8 @@ void clearState(bool safeMode) {
 			buttonsMenu = nullptr;
 		}
 	}
+
+	releaseKeys();
 
 	frameLabel = nullptr;
 	stateLabel = nullptr;
@@ -717,7 +719,7 @@ class $modify(PauseLayer) {
 		PauseLayer::customSetup();
 		auto winSize = CCDirector::sharedDirector()->getWinSize();
 		CCSprite* sprite = nullptr;
-		
+
 		if (Loader::get()->isModLoaded("tpdea.betterpause-Better")) {
 			sprite = CCSprite::createWithSpriteFrameName("GJ_stopEditorBtn_001.png");
 		} else {
@@ -849,7 +851,7 @@ void addButton(const char* id) {
         	PlayLayer::get(),
 			menu_selector(mobileButtons::frameAdvance)
     	);
-		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(15, 7));
+		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(15, y));
 		btn->setID(id);
 		btn->setZOrder(100);
 		buttonsMenu->addChild(btn);
@@ -909,7 +911,9 @@ void addLabel(const char* text) {
 
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
-		if (!isAndroid) GJBaseGameLayer::handleButton(holding,button,player1);
+		if (!isAndroid) {
+if ((recorder.state == state::playing && playingAction) || recorder.state != state::playing) GJBaseGameLayer::handleButton(holding,button,player1);
+}
 		if (isAndroid) {
 			if (recorder.state == state::recording) {
 			GJBaseGameLayer::handleButton(holding,button,player1);
@@ -937,7 +941,7 @@ class $modify(GJBaseGameLayer) {
 			}
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
-		} else if (recorder.state == state::playing) {
+		} else if (recorder.state == state::playing && playingAction) {
 			GJBaseGameLayer::handleButton(holding,button,player1);
 			if (androidAction != nullptr) {
 			if (androidAction->p1.xPos != 0) {
@@ -953,7 +957,7 @@ class $modify(GJBaseGameLayer) {
 				}
 			}
 		}
-		} else GJBaseGameLayer::handleButton(holding,button,player1);
+		} else if (recorder.state != state::playing) GJBaseGameLayer::handleButton(holding,button,player1);
 
 	} else if (recorder.state == state::recording) {
 			playerData p1;
@@ -1011,7 +1015,7 @@ class $modify(GJBaseGameLayer) {
 				};
 		}
 			recorder.recordAction(holding, button, player1, recorder.currentFrame(), this, p1, p2);
-	}
+}
 	}
 
 	int getPlayer1(int p1, GJBaseGameLayer* bgl) {
@@ -1158,13 +1162,15 @@ if (recorder.state == state::playing && isAndroid) {
             	auto& currentActionIndex = recorder.macro[recorder.currentAction];
 				androidAction = &currentActionIndex;
 				
-				if (!currentActionIndex.posOnly)
-					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
+				if (!currentActionIndex.posOnly) {
+				playingAction = true;
+				cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
 					static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)][currentActionIndex.button-1]),
 					currentActionIndex.holding, false);
-
+}
             	recorder.currentAction++;
         	}
+playingAction = false;
 			if (recorder.currentAction >= recorder.macro.size()) {
 				if (stateLabel!=nullptr) stateLabel->removeFromParent();
 				clearState(false);
@@ -1262,13 +1268,15 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 				}
 				}
 				if (!currentActionIndex.posOnly) {
-					self->handleButton(currentActionIndex.holding, currentActionIndex.button, currentActionIndex.player1);
+				playingAction = true;
+				self->handleButton(currentActionIndex.holding, currentActionIndex.button, currentActionIndex.player1);
 					if (currentActionIndex.holding) lastHold = true;
 					else lastHold = false;
 				}
 
             	recorder.currentAction++;
         	}
+playingAction = false;
 			if (recorder.currentAction >= recorder.macro.size()) {
 				if (stateLabel!=nullptr) stateLabel->removeFromParent();
 				clearState(true);
@@ -1286,7 +1294,7 @@ class $modify(PlayLayer) {
 		
 		playerHolding = false;
 		leftOver = 0.f;
-
+playingAction = false;
 
 
 		if (isAndroid) androidAction = nullptr;
@@ -1303,7 +1311,6 @@ class $modify(PlayLayer) {
         	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
         	channel->setPitch(1);
 		} else if (recorder.state != state::off) {
-			releaseKeys();
         	if (this->m_isPracticeMode && !recorder.macro.empty() && recorder.currentFrame() != 0) {
   				int frame = recorder.currentFrame(); 
 				try {
@@ -1329,9 +1336,12 @@ class $modify(PlayLayer) {
 				} catch (const std::exception& e) {
 					log::debug("wtfffff? - {}",e);
 				}
-        	} else if (!recorder.macro.empty()) {
+        	} else {
+				if (!recorder.macro.empty())
+					recorder.macro.clear();
+
+				recorder.android = false;
 				recorder.fps = fpsArr[fpsIndex];
-				recorder.macro.clear();
 			} 
    		}
 	}
