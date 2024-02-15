@@ -914,7 +914,6 @@ class $modify(GJBaseGameLayer) {
 if ((recorder.state == state::playing && playingAction) || recorder.state != state::playing) GJBaseGameLayer::handleButton(holding,button,player1);
 		if (isAndroid) {
 			if (recorder.state == state::recording) {
-			GJBaseGameLayer::handleButton(holding,button,player1);
 			playerData p1;
 			playerData p2;
 				p1 = {
@@ -1164,7 +1163,7 @@ if (recorder.state == state::playing && isAndroid) {
 				cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
 					static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)][currentActionIndex.button-1]),
 					currentActionIndex.holding, false);
-}
+				}
             	recorder.currentAction++;
         	}
 playingAction = false;
