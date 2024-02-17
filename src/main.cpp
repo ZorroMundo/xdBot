@@ -857,7 +857,6 @@ void addLabel(const char* text) {
 }
 
 void checkUI() {
-	log::debug("checked");
 	if (frameLabel != nullptr) {
 				if (!Mod::get()->getSettingValue<bool>("show_frame_label")) {
 					frameLabel->removeFromParent();
@@ -1003,7 +1002,6 @@ class $modify(PauseLayer) {
 
 	void onResume(CCObject* sender) {
 		PauseLayer::onResume(sender);
-		checkUI();
 		if (restart) PlayLayer::get()->resetLevel();
 		if (recorder.state == state::off) {
 			if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
@@ -1011,6 +1009,8 @@ class $modify(PauseLayer) {
         	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
 			channel->setPitch(1);
 			}
+		} else {
+			checkUI();
 		}
 	}
 
