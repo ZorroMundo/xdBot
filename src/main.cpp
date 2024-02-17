@@ -717,6 +717,63 @@ playingAction = false;
 	}
 }
 
+class mobileButtons {
+public:
+	void frameAdvance(CCObject*) {
+	if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
+		if (Mod::get()->getSettingValue<bool>("frame_stepper")) stepFrame = true;
+		else {
+			Mod::get()->setSettingValue("frame_stepper", true);
+			if (disableFSBtn == nullptr)  {
+				int y = 35;
+				if (PlayLayer::get()->m_levelSettings->m_platformerMode) y = 95;
+
+				auto winSize = CCDirector::sharedDirector()->getWinSize();
+				CCSprite* spr = nullptr;
+				CCMenuItemSpriteExtra* btn = nullptr;
+				spr = CCSprite::createWithSpriteFrameName("GJ_deleteSongBtn_001.png");
+				spr->setOpacity(102);
+        		spr->setScale(0.65f);
+				btn = CCMenuItemSpriteExtra::create(
+        		spr,
+        		PlayLayer::get(),
+				menu_selector(mobileButtons::disableFrameStepper)
+    			);
+				btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(70, y));
+				btn->setZOrder(100);
+				btn->setID("disable_fs_btn");
+				buttonsMenu->addChild(btn);
+				disableFSBtn = btn;
+			}
+		} 
+	}
+}
+
+void toggleSpeedhack(CCObject*) {
+	if (!Mod::get()->getSettingValue<bool>("disable_speedhack")) {
+		if (prevSpeed != 1 && Mod::get()->getSettingValue<double>("speedhack") == 1)
+			Mod::get()->setSettingValue("speedhack", prevSpeed);
+		else {
+			prevSpeed = Mod::get()->getSettingValue<double>("speedhack");
+			Mod::get()->setSavedValue<float>("previous_speed", prevSpeed);
+			Mod::get()->setSettingValue("speedhack", 1.0);
+			if (Mod::get()->getSettingValue<bool>("speedhack_audio")) recorder.syncMusic();
+		}
+	}
+}
+
+void disableFrameStepper(CCObject*) {
+	if (Mod::get()->getSettingValue<bool>("frame_stepper")) {
+		recorder.syncMusic();
+		Mod::get()->setSettingValue("frame_stepper", false);
+		if (disableFSBtn != nullptr) {
+			disableFSBtn->removeFromParent();
+			disableFSBtn = nullptr;
+		}
+	}
+}
+
+};
 
 void addButton(const char* id) {
 	auto winSize = CCDirector::sharedDirector()->getWinSize();
@@ -968,64 +1025,6 @@ class $modify(PauseLayer) {
 			}
 		}
 	}
-
-};
-
-class mobileButtons {
-public:
-	void frameAdvance(CCObject*) {
-	if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
-		if (Mod::get()->getSettingValue<bool>("frame_stepper")) stepFrame = true;
-		else {
-			Mod::get()->setSettingValue("frame_stepper", true);
-			if (disableFSBtn == nullptr)  {
-				int y = 35;
-				if (PlayLayer::get()->m_levelSettings->m_platformerMode) y = 95;
-
-				auto winSize = CCDirector::sharedDirector()->getWinSize();
-				CCSprite* spr = nullptr;
-				CCMenuItemSpriteExtra* btn = nullptr;
-				spr = CCSprite::createWithSpriteFrameName("GJ_deleteSongBtn_001.png");
-				spr->setOpacity(102);
-        		spr->setScale(0.65f);
-				btn = CCMenuItemSpriteExtra::create(
-        		spr,
-        		PlayLayer::get(),
-				menu_selector(mobileButtons::disableFrameStepper)
-    			);
-				btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(70, y));
-				btn->setZOrder(100);
-				btn->setID("disable_fs_btn");
-				buttonsMenu->addChild(btn);
-				disableFSBtn = btn;
-			}
-		} 
-	}
-}
-
-void toggleSpeedhack(CCObject*) {
-	if (!Mod::get()->getSettingValue<bool>("disable_speedhack")) {
-		if (prevSpeed != 1 && Mod::get()->getSettingValue<double>("speedhack") == 1)
-			Mod::get()->setSettingValue("speedhack", prevSpeed);
-		else {
-			prevSpeed = Mod::get()->getSettingValue<double>("speedhack");
-			Mod::get()->setSavedValue<float>("previous_speed", prevSpeed);
-			Mod::get()->setSettingValue("speedhack", 1.0);
-			if (Mod::get()->getSettingValue<bool>("speedhack_audio")) recorder.syncMusic();
-		}
-	}
-}
-
-void disableFrameStepper(CCObject*) {
-	if (Mod::get()->getSettingValue<bool>("frame_stepper")) {
-		recorder.syncMusic();
-		Mod::get()->setSettingValue("frame_stepper", false);
-		if (disableFSBtn != nullptr) {
-			disableFSBtn->removeFromParent();
-			disableFSBtn = nullptr;
-		}
-	}
-}
 
 };
 
