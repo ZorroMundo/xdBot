@@ -817,6 +817,7 @@ void toggleSpeedhack(CCObject*) {
 			prevSpeed = Mod::get()->getSettingValue<double>("speedhack");
 			Mod::get()->setSavedValue<float>("previous_speed", prevSpeed);
 			Mod::get()->setSettingValue("speedhack", 1.0);
+			recorder.syncMusic();
 		}
 	}
 }
@@ -1483,6 +1484,7 @@ class $modify(CCKeyboardDispatcher) {
 					prevSpeed = Mod::get()->getSettingValue<double>("speedhack");
 					Mod::get()->setSavedValue<float>("previous_speed", prevSpeed);
 					Mod::get()->setSettingValue("speedhack", 1.0);
+					recorder.syncMusic();
 				}
 			}
 		}
