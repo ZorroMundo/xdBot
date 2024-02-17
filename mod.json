@@ -1,6 +1,6 @@
 {
 	"geode": "2.0.0-beta.13",
-	"version": "v1.4.3",
+	"version": "v1.4.5",
 	"id": "zilko.xdbot",
 	"gd": {
 		"win": "2.204",
@@ -17,6 +17,12 @@
 			"max": 1.0,
 			"default": 1.0
 		},
+		"speedhack_audio": {
+			"name": "Speedhack Audio",
+			"description": "Slows down the song to match the game speed.",
+			"type": "bool",
+			"default": true
+		},
 		"frame_stepper": {
 			"name": "Frame Stepper",
 			"description": "<cg>Advance Frame</c> = <cl>V</c>\n<cg>Disable</c> = <cl>B</c>\nLets you advance frame by frame for more precision.",
@@ -28,6 +34,12 @@
 			"description": "Toggles playing the macro automatically when you finish recording a level.",
 			"type": "bool",
 			"default": false
+		},
+		"end_button": {
+			"name": "Show Menu Button At End",
+			"description": "Shows the xdBot button at the level complete screen.",
+			"type": "bool",
+			"default": true
 		},
 		"show_frame_label": {
 			"name": "Show frame label",
