@@ -716,7 +716,115 @@ playingAction = false;
 		safeMode::updateSafeMode();
 	}
 }
+void checkUI() {
+	if (frameLabel != nullptr) {
+				if (!Mod::get()->getSettingValue<bool>("show_frame_label")) {
+					frameLabel->removeFromParent();
+					frameLabel = nullptr;
+				}
+			} else if (Mod::get()->getSettingValue<bool>("show_frame_label")) {
+				addLabel("Frame: 0");
+			}
+			if (recorder.state == state::off) {
+			if (frameLabel != nullptr) {
+				frameLabel->removeFromParent();
+				frameLabel = nullptr;
+			}
+			if (stateLabel != nullptr) {
+				stateLabel->removeFromParent();
+				stateLabel = nullptr;
+			}
+		}
 
+		if (recorder.state != state::recording && isAndroid) {
+			if (disableFSBtn != nullptr) {
+				disableFSBtn->removeFromParent();
+				disableFSBtn = nullptr;
+			}
+			if (advanceFrameBtn != nullptr) {
+				advanceFrameBtn->removeFromParent();
+				advanceFrameBtn = nullptr;
+			}
+			if (speedhackBtn != nullptr) {
+				speedhackBtn->removeFromParent();
+				speedhackBtn = nullptr;
+			}
+			if (buttonsMenu != nullptr) {
+				buttonsMenu->removeFromParent();
+				buttonsMenu = nullptr;
+			}
+		}
+		if (recorder.state == state::playing) {
+			if (stateLabel != nullptr) {
+				if (stateLabel->getString() != "Playing" && Mod::get()->getSettingValue<bool>("show_playing_label"))
+					stateLabel->setString("Playing");
+				else if (!Mod::get()->getSettingValue<bool>("show_playing_label")) {
+					stateLabel->removeFromParent();
+					stateLabel = nullptr;
+				}
+			} else if (Mod::get()->getSettingValue<bool>("show_playing_label")) {
+				addLabel("Playing");
+			}
+		}
+		if (recorder.state == state::recording) {
+			if (stateLabel != nullptr) {
+				if (stateLabel->getString() != "Recording" && Mod::get()->getSettingValue<bool>("show_recording_label"))
+					stateLabel->setString("Recording");
+				else if (!Mod::get()->getSettingValue<bool>("show_recording_label")) {
+					stateLabel->removeFromParent();
+					stateLabel = nullptr;
+				}
+			} else if (Mod::get()->getSettingValue<bool>("show_recording_label")) {
+				addLabel("Recording");
+			}
+		}
+	if (isAndroid) {
+			if (buttonsMenu != nullptr) {
+			if (advanceFrameBtn != nullptr) {
+				if (Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
+					if (disableFSBtn != nullptr) {
+						disableFSBtn->removeFromParent();
+						disableFSBtn = nullptr;
+					}
+					advanceFrameBtn->removeFromParent();
+					advanceFrameBtn = nullptr;
+				}
+			} else if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
+				addButton("advance_frame_btn");
+				if (Mod::get()->getSettingValue<bool>("frame_stepper")){
+					addButton("disable_fs_btn");
+				}
+			}
+
+			if (speedhackBtn != nullptr) {
+				if (Mod::get()->getSettingValue<bool>("disable_speedhack")) {
+					speedhackBtn->removeFromParent();
+					speedhackBtn = nullptr;
+				}
+			} else if (!Mod::get()->getSettingValue<bool>("disable_speedhack"))
+				addButton("speedhack_btn");
+
+			} else {
+			if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
+				buttonsMenu = CCMenu::create();
+				buttonsMenu->setPosition({0,0});
+				PlayLayer::get()->addChild(buttonsMenu);
+				addButton("advance_frame_btn");
+				if (Mod::get()->getSettingValue<bool>("frame_stepper")){
+					addButton("disable_fs_btn");
+				}
+			}
+			if (!Mod::get()->getSettingValue<bool>("disable_speedhack")) {
+				if (buttonsMenu == nullptr) {
+					buttonsMenu = CCMenu::create();
+					buttonsMenu->setPosition({0,0});
+					PlayLayer::get()->addChild(buttonsMenu);
+				}
+				addButton("speedhack_btn");
+			}
+			}
+			}
+}
 	// ---------------- Hooks ---------------- 539//
 
 class $modify(PauseLayer) {
@@ -754,6 +862,7 @@ class $modify(PauseLayer) {
 
 	void onResume(CCObject* sender) {
 		PauseLayer::onResume(sender);
+		checkUI();
 		if (restart) PlayLayer::get()->resetLevel();
 		if (recorder.state == state::off) {
 			if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
@@ -766,6 +875,7 @@ class $modify(PauseLayer) {
 
 	void onPracticeMode(CCObject* sender) {
 		PauseLayer::onPracticeMode(sender);
+		checkUI();
 		if (restart) PlayLayer::get()->resetLevel();
 		if (recorder.state == state::off) {
 			if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
@@ -1035,16 +1145,8 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 
 	void update(float dt) {
 		if (recorder.state != state::off) {
-			if (frameLabel != nullptr) {
-				if (Mod::get()->getSettingValue<bool>("show_frame_label"))
+			if (frameLabel != nullptr)
 					frameLabel->setString(("Frame: " + std::to_string(recorder.currentFrame())).c_str());
-				else {
-					frameLabel->removeFromParent();
-					frameLabel = nullptr;
-				}
-			} else if (Mod::get()->getSettingValue<bool>("show_frame_label")) {
-				addLabel("Frame: 0");
-			}
 		} else if (shouldPlay) {
 			if (recorder.currentFrame() == 0) {
 				shouldPlay = false;
@@ -1095,53 +1197,6 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 			}
 		}
 		if (recorder.state == state::recording) {
-			if (isAndroid) {
-			if (buttonsMenu != nullptr) {
-			if (advanceFrameBtn != nullptr) {
-				if (Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
-					if (disableFSBtn != nullptr) {
-						disableFSBtn->removeFromParent();
-						disableFSBtn = nullptr;
-					}
-					advanceFrameBtn->removeFromParent();
-					advanceFrameBtn = nullptr;
-				}
-			} else if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
-				addButton("advance_frame_btn");
-				if (Mod::get()->getSettingValue<bool>("frame_stepper")){
-					addButton("disable_fs_btn");
-				}
-			}
-
-			if (speedhackBtn != nullptr) {
-				if (Mod::get()->getSettingValue<bool>("disable_speedhack")) {
-					speedhackBtn->removeFromParent();
-					speedhackBtn = nullptr;
-				}
-			} else if (!Mod::get()->getSettingValue<bool>("disable_speedhack"))
-				addButton("speedhack_btn");
-
-			} else {
-			if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
-				buttonsMenu = CCMenu::create();
-				buttonsMenu->setPosition({0,0});
-				PlayLayer::get()->addChild(buttonsMenu);
-				addButton("advance_frame_btn");
-				if (Mod::get()->getSettingValue<bool>("frame_stepper")){
-					addButton("disable_fs_btn");
-				}
-			}
-			if (!Mod::get()->getSettingValue<bool>("disable_speedhack")) {
-				if (buttonsMenu == nullptr) {
-					buttonsMenu = CCMenu::create();
-					buttonsMenu->setPosition({0,0});
-					PlayLayer::get()->addChild(buttonsMenu);
-				}
-				addButton("speedhack_btn");
-			}
-			}
-			}
-
 			if (stateLabel != nullptr) {
 				if (stateLabel->getString() != "Recording" && Mod::get()->getSettingValue<bool>("show_recording_label"))
 					stateLabel->setString("Recording");
@@ -1331,6 +1386,7 @@ class $modify(PlayLayer) {
         	channel->setPitch(1);
 			}
 		} else if (recorder.state != state::off) {
+			checkUI();
         	if (this->m_isPracticeMode && !recorder.macro.empty() && recorder.currentFrame() != 0) {
   				int frame = recorder.currentFrame(); 
 				try {
@@ -1380,7 +1436,7 @@ class $modify(EndLevelLayer) {
 
 	void customSetup() {
 		EndLevelLayer::customSetup();
-		if (Mod::get()->getSettingValue<bool>("end_button")) {
+		if (Mod::get()->getSettingValue<bool>("end_button") && shouldPlay2) {
 			auto winSize = CCDirector::sharedDirector()->getWinSize();
 			CCSprite* sprite = nullptr;
 			sprite = CCSprite::createWithSpriteFrameName("GJ_playBtn2_001.png");
@@ -1389,7 +1445,7 @@ class $modify(EndLevelLayer) {
 			this,
 			menu_selector(RecordLayer::openMenu));
 
-			btn->setPosition(winSize/2 + CCPOINT_CREATE(40, -60));
+			btn->setPosition(winSize/2 + CCPOINT_CREATE(160, -99));
 
 			auto layer = reinterpret_cast<CCLayer*>(this->getChildren()->objectAtIndex(0));
 			auto menu = CCMenu::create();
