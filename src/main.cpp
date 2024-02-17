@@ -716,6 +716,89 @@ playingAction = false;
 		safeMode::updateSafeMode();
 	}
 }
+
+
+void addButton(const char* id) {
+	auto winSize = CCDirector::sharedDirector()->getWinSize();
+	CCSprite* spr = nullptr;
+	CCMenuItemSpriteExtra* btn = nullptr;
+
+	int y = 35;
+	if (PlayLayer::get()->m_levelSettings->m_platformerMode) y = 95;
+		
+	if (id == "advance_frame_btn") {
+		spr = CCSprite::createWithSpriteFrameName("GJ_plainBtn_001.png");
+        spr->setScale(0.65f);
+		spr->setOpacity(102);
+        auto icon = CCSprite::createWithSpriteFrameName("GJ_arrow_02_001.png");
+        icon->setPosition(spr->getContentSize() / 2 + ccp(2.5f,0));
+        icon->setScaleY(0.7f);
+        icon->setScaleX(-0.7f);
+		icon->setOpacity(102);
+        spr->addChild(icon);
+		btn = CCMenuItemSpriteExtra::create(
+        	spr,
+        	PlayLayer::get(),
+			menu_selector(mobileButtons::frameAdvance)
+    	);
+		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(15, y));
+		btn->setID(id);
+		btn->setZOrder(100);
+		buttonsMenu->addChild(btn);
+		advanceFrameBtn = btn;
+	} else if (id == "speedhack_btn") {
+		spr = CCSprite::createWithSpriteFrameName("GJ_plainBtn_001.png");
+        spr->setScale(0.65f);
+		spr->setOpacity(102);
+        auto icon = CCSprite::createWithSpriteFrameName("GJ_timeIcon_001.png");
+        icon->setPosition(spr->getContentSize() / 2);
+		icon->setOpacity(102);
+        spr->addChild(icon);
+		btn = CCMenuItemSpriteExtra::create(
+        	spr,
+        	PlayLayer::get(),
+			menu_selector(mobileButtons::toggleSpeedhack)
+    	);
+		btn->setPosition(winSize/2 + ccp(winSize.width/2, -winSize.height/2) + ccp(-15, 35));
+		btn->setID(id);
+		btn->setZOrder(100);
+		buttonsMenu->addChild(btn);
+		speedhackBtn = btn;
+	} else if (id == "disable_fs_btn") {
+		spr = CCSprite::createWithSpriteFrameName("GJ_deleteSongBtn_001.png");
+		spr->setOpacity(102);
+        spr->setScale(0.65f);
+		btn = CCMenuItemSpriteExtra::create(
+        	spr,
+        	PlayLayer::get(),
+			menu_selector(mobileButtons::disableFrameStepper)
+    	);
+		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(70, y));
+		btn->setID(id);
+		btn->setZOrder(100);
+		buttonsMenu->addChild(btn);
+		disableFSBtn = btn;
+	}
+}
+
+void addLabel(const char* text) {
+	auto label = CCLabelBMFont::create(text, "chatFont.fnt");
+	auto winSize = CCDirector::sharedDirector()->getWinSize();
+	label->setScale(0.7f);
+	if (text != "Frame: 0") {
+		stateLabel = label;
+		label->setID("stateLabel");
+		label->setPosition(winSize/2 + ccp(winSize.width/2, -winSize.height/2) + ccp(-31, 12));
+	} else {
+		label->setAnchorPoint(ccp(0.0f,0.5f));
+		label->setID("frameLabel");
+		frameLabel = label;
+		label->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(6, 12));
+	}
+	label->setZOrder(100);
+	PlayLayer::get()->addChild(label);
+}
+
 void checkUI() {
 	if (frameLabel != nullptr) {
 				if (!Mod::get()->getSettingValue<bool>("show_frame_label")) {
@@ -945,87 +1028,6 @@ void disableFrameStepper(CCObject*) {
 }
 
 };
-
-void addButton(const char* id) {
-	auto winSize = CCDirector::sharedDirector()->getWinSize();
-	CCSprite* spr = nullptr;
-	CCMenuItemSpriteExtra* btn = nullptr;
-
-	int y = 35;
-	if (PlayLayer::get()->m_levelSettings->m_platformerMode) y = 95;
-		
-	if (id == "advance_frame_btn") {
-		spr = CCSprite::createWithSpriteFrameName("GJ_plainBtn_001.png");
-        spr->setScale(0.65f);
-		spr->setOpacity(102);
-        auto icon = CCSprite::createWithSpriteFrameName("GJ_arrow_02_001.png");
-        icon->setPosition(spr->getContentSize() / 2 + ccp(2.5f,0));
-        icon->setScaleY(0.7f);
-        icon->setScaleX(-0.7f);
-		icon->setOpacity(102);
-        spr->addChild(icon);
-		btn = CCMenuItemSpriteExtra::create(
-        	spr,
-        	PlayLayer::get(),
-			menu_selector(mobileButtons::frameAdvance)
-    	);
-		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(15, y));
-		btn->setID(id);
-		btn->setZOrder(100);
-		buttonsMenu->addChild(btn);
-		advanceFrameBtn = btn;
-	} else if (id == "speedhack_btn") {
-		spr = CCSprite::createWithSpriteFrameName("GJ_plainBtn_001.png");
-        spr->setScale(0.65f);
-		spr->setOpacity(102);
-        auto icon = CCSprite::createWithSpriteFrameName("GJ_timeIcon_001.png");
-        icon->setPosition(spr->getContentSize() / 2);
-		icon->setOpacity(102);
-        spr->addChild(icon);
-		btn = CCMenuItemSpriteExtra::create(
-        	spr,
-        	PlayLayer::get(),
-			menu_selector(mobileButtons::toggleSpeedhack)
-    	);
-		btn->setPosition(winSize/2 + ccp(winSize.width/2, -winSize.height/2) + ccp(-15, 35));
-		btn->setID(id);
-		btn->setZOrder(100);
-		buttonsMenu->addChild(btn);
-		speedhackBtn = btn;
-	} else if (id == "disable_fs_btn") {
-		spr = CCSprite::createWithSpriteFrameName("GJ_deleteSongBtn_001.png");
-		spr->setOpacity(102);
-        spr->setScale(0.65f);
-		btn = CCMenuItemSpriteExtra::create(
-        	spr,
-        	PlayLayer::get(),
-			menu_selector(mobileButtons::disableFrameStepper)
-    	);
-		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(70, y));
-		btn->setID(id);
-		btn->setZOrder(100);
-		buttonsMenu->addChild(btn);
-		disableFSBtn = btn;
-	}
-}
-
-void addLabel(const char* text) {
-	auto label = CCLabelBMFont::create(text, "chatFont.fnt");
-	auto winSize = CCDirector::sharedDirector()->getWinSize();
-	label->setScale(0.7f);
-	if (text != "Frame: 0") {
-		stateLabel = label;
-		label->setID("stateLabel");
-		label->setPosition(winSize/2 + ccp(winSize.width/2, -winSize.height/2) + ccp(-31, 12));
-	} else {
-		label->setAnchorPoint(ccp(0.0f,0.5f));
-		label->setID("frameLabel");
-		frameLabel = label;
-		label->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(6, 12));
-	}
-	label->setZOrder(100);
-	PlayLayer::get()->addChild(label);
-}
 
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
