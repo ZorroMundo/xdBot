@@ -1427,7 +1427,7 @@ class $modify(CCScheduler) {
 		if (recorder.state == state::off) return CCScheduler::update(dt);
 
 		if (holdV) holdCooldown++;
-		if (holdCooldown > (recorder.fps/8) / (240/recorder.fps)) {
+		if (holdCooldown > (recorder.fps/8) / (recorder.fps/240)) {
 			if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
 				if (Mod::get()->getSettingValue<bool>("frame_stepper")) stepFrame = true;
 				else {
@@ -1500,6 +1500,7 @@ class $modify(CCKeyboardDispatcher) {
 						addButton("disable_fs_btn");
 				} 
 			}
+			if (!hold) holdCooldown = 0;
 			holdV = hold;
 		}
 
