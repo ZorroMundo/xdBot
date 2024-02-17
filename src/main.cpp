@@ -1169,11 +1169,14 @@ if (recorder.state == state::playing && isAndroid) {
 				androidAction = &currentActionIndex;
 				
 				if (!currentActionIndex.posOnly) {
-				playingAction = true;
-				cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
-					static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)][currentActionIndex.button-1]),
+					playingAction = true;
+
+					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
+					static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)]
+					[((currentActionIndex.button < 4) ? currentActionIndex.button : 1)-1]),
 					currentActionIndex.holding, false);
-}
+
+				}
             	recorder.currentAction++;
         	}
 playingAction = false;
@@ -1274,8 +1277,14 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 				}
 				}
 				if (!currentActionIndex.posOnly) {
-				playingAction = true;
-				self->handleButton(currentActionIndex.holding, currentActionIndex.button, currentActionIndex.player1);
+					playingAction = true;
+
+					self->handleButton(
+    				currentActionIndex.holding,
+    				((currentActionIndex.button < 4) ? currentActionIndex.button : 1),
+    				currentActionIndex.player1
+					);
+
 					if (currentActionIndex.holding) lastHold = true;
 					else lastHold = false;
 				}
@@ -1298,10 +1307,10 @@ class $modify(PlayLayer) {
 			restart = false;
 		}
 		
-		playerHolding = false;
-		leftOver = 0.f;
-playingAction = false;
-
+		if (recorder.state != state::off) {
+			playerHolding = false;
+			leftOver = 0.f;
+		}
 
 		if (isAndroid) androidAction = nullptr;
 
@@ -1312,6 +1321,7 @@ playingAction = false;
 		
 
 		if (recorder.state == state::playing) {
+		playingAction = false;
 			recorder.currentAction = 0;
 			if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
 			FMOD::ChannelGroup* channel;
