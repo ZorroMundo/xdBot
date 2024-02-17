@@ -1491,8 +1491,8 @@ class $modify(CCKeyboardDispatcher) {
 			}
 		}
 
-		if (key == cocos2d::enumKeyCodes::KEY_V && hold && recorder.state == state::recording) {
-			if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
+		if (key == cocos2d::enumKeyCodes::KEY_V && !p && recorder.state == state::recording) {
+			if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper") && hold) {
 				if (Mod::get()->getSettingValue<bool>("frame_stepper")) stepFrame = true;
 				else {
 					Mod::get()->setSettingValue("frame_stepper", true);
@@ -1500,7 +1500,7 @@ class $modify(CCKeyboardDispatcher) {
 						addButton("disable_fs_btn");
 				} 
 			}
-			//holdV = hold;
+			holdV = hold;
 		}
 
 		if (key == cocos2d::enumKeyCodes::KEY_B && hold && !p && recorder.state == state::recording) {
