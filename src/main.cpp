@@ -1389,7 +1389,7 @@ class $modify(EndLevelLayer) {
 			this,
 			menu_selector(RecordLayer::openMenu));
 
-			btn->setPosition(winSize/2 + CCPOINT_CREATE(winSize.width/2, -winSize.height/2) + CCPOINT_CREATE(-123, 60));
+			btn->setPosition(winSize/2 + CCPOINT_CREATE(40, -60));
 
 			auto layer = reinterpret_cast<CCLayer*>(this->getChildren()->objectAtIndex(0));
 			auto menu = CCMenu::create();
