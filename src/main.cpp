@@ -1424,7 +1424,7 @@ class $modify(CCScheduler) {
 		if (recorder.state == state::off) return CCScheduler::update(dt);
 
 		if (holdV) holdCooldown++;
-		if (holdCooldown > 60 && recorder.currentFrame() % 2 == 0) {
+		if (holdCooldown > 60) {
 			if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
 				if (Mod::get()->getSettingValue<bool>("frame_stepper")) stepFrame = true;
 				else {
@@ -1434,26 +1434,23 @@ class $modify(CCScheduler) {
 				} 
 			}
 		}
-		
 
-		float speedhackValue = static_cast<float>(Mod::get()->getSettingValue<double>("speedhack"));
+		std::stringstream ss;
+    	ss << std::fixed << std::setprecision(2) << static_cast<float>(Mod::get()->getSettingValue<double>("speedhack"));
+    	float speedhackValue = std::stof(ss.str());
 
-		if (recorder.state == state::recording) {
-			if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
+		if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
 			FMOD::ChannelGroup* channel;
         	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
         	channel->setPitch(speedhackValue);
-			}
-		} else if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
-			FMOD::ChannelGroup* channel;
-        	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
-        	channel->setPitch(1);
 		}
 
 		using namespace std::literals;
 
 		float dt2 = (1.f / recorder.fps);
-		dt = (recorder.state == state::recording) ? dt * speedhackValue : dt;
+
+		dt *= speedhackValue;
+
     	auto startTime = std::chrono::high_resolution_clock::now();
 		int mult = static_cast<int>((dt + leftOver)/dt2);  
     	for (int i = 0; i < mult; ++i) {
@@ -1476,7 +1473,7 @@ class $modify(CCScheduler) {
 
 class $modify(CCKeyboardDispatcher) {
 	bool dispatchKeyboardMSG(enumKeyCodes key, bool hold, bool p) {
-		if (key == cocos2d::enumKeyCodes::KEY_C && hold && !p && recorder.state == state::recording) {
+		if (key == cocos2d::enumKeyCodes::KEY_C && hold && !p && recorder.state != state::off) {
 			if (!Mod::get()->getSettingValue<bool>("disable_speedhack")) {
 				if (prevSpeed != 1 && Mod::get()->getSettingValue<double>("speedhack") == 1)
 					Mod::get()->setSettingValue("speedhack", prevSpeed);
@@ -1497,8 +1494,7 @@ class $modify(CCKeyboardDispatcher) {
 					if (disableFSBtn == nullptr && isAndroid) 
 						addButton("disable_fs_btn");
 				} 
-			}
-			if (!hold) holdCooldown = 0;
+			} else if (!hold) holdCooldown = 0;
 			holdV = hold;
 		}
 
