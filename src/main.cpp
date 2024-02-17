@@ -33,6 +33,7 @@ bool lastHold = false;
 bool playingAction = false;
 bool shouldPlay = false;
 bool shouldPlay2 = false;
+bool holdV = false;
 
 const int playerEnums[2][3] = {
     {cocos2d::enumKeyCodes::KEY_ArrowUp, cocos2d::enumKeyCodes::KEY_ArrowLeft, cocos2d::enumKeyCodes::KEY_ArrowRight}, 
@@ -661,9 +662,12 @@ void macroCell::loadMacro(CCObject* button) {
 }
 
 void clearState(bool safeMode) {
+	if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
 	FMOD::ChannelGroup* channel;
     FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
 	channel->setPitch(1);
+	}
+	
 	recorder.state = state::off;
 
 playingAction = false;
@@ -751,11 +755,11 @@ class $modify(PauseLayer) {
 		PauseLayer::onResume(sender);
 		if (restart) PlayLayer::get()->resetLevel();
 		if (recorder.state == state::off) {
+			if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
 			FMOD::ChannelGroup* channel;
         	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
 			channel->setPitch(1);
-		} else {
-			recorder.syncMusic();
+			}
 		}
 	}
 
@@ -763,9 +767,11 @@ class $modify(PauseLayer) {
 		PauseLayer::onPracticeMode(sender);
 		if (restart) PlayLayer::get()->resetLevel();
 		if (recorder.state == state::off) {
+			if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
 			FMOD::ChannelGroup* channel;
         	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
 			channel->setPitch(1);
+			}
 		}
 	}
 
@@ -1307,9 +1313,11 @@ playingAction = false;
 
 		if (recorder.state == state::playing) {
 			recorder.currentAction = 0;
+			if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
 			FMOD::ChannelGroup* channel;
         	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
         	channel->setPitch(1);
+			}
 		} else if (recorder.state != state::off) {
         	if (this->m_isPracticeMode && !recorder.macro.empty() && recorder.currentFrame() != 0) {
   				int frame = recorder.currentFrame(); 
@@ -1357,6 +1365,23 @@ playingAction = false;
 };
 
 class $modify(EndLevelLayer) {
+
+	void customSetup() {
+		EndLevelLayer::customSetup();
+		if (Mod::get()->getSettingValue<bool>("end_button")) {
+			auto winSize = CCDirector::sharedDirector()->getWinSize();
+			CCSprite* sprite = nullptr;
+
+        	auto btn = CCMenuItemSpriteExtra::create(sprite,
+			this,
+			menu_selector(RecordLayer::openMenu));
+
+			btn->setPosition(winSize/2 + CCPOINT_CREATE(-winSize.width/2, -winSize.height/2) + CCPOINT_CREATE(442, 61));
+
+        	this->addChild(btn);
+		}
+	}
+
 	void onReplay(CCObject* s) {
 		EndLevelLayer::onReplay(s);
 		if (shouldPlay2 && Mod::get()->getSettingValue<bool>("auto_enable_play")) {
@@ -1377,17 +1402,33 @@ class $modify(EndLevelLayer) {
 	}
 };
 int syncCooldown = 0;
+int holdCooldown = 0;
 class $modify(CCScheduler) {
 	void update(float dt) {
 		if (recorder.state == state::off) return CCScheduler::update(dt);
 
+		if (holdV) holdCooldown++;
+		if (holdCooldown > (recorder.fps/8) / (240/recorder.fps)) {
+			if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
+				if (Mod::get()->getSettingValue<bool>("frame_stepper")) stepFrame = true;
+				else {
+					Mod::get()->setSettingValue("frame_stepper", true);
+					if (disableFSBtn == nullptr && isAndroid) 
+						addButton("disable_fs_btn");
+				} 
+			}
+		}
+		
+
 		float speedhackValue = static_cast<float>(Mod::get()->getSettingValue<double>("speedhack"));
 
 		if (recorder.state == state::recording) {
+			if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
 			FMOD::ChannelGroup* channel;
         	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
         	channel->setPitch(speedhackValue);
-		} else {
+			}
+		} else if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
 			FMOD::ChannelGroup* channel;
         	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
         	channel->setPitch(1);
@@ -1431,7 +1472,7 @@ class $modify(CCKeyboardDispatcher) {
 			}
 		}
 
-		if (key == cocos2d::enumKeyCodes::KEY_V && hold && !p && recorder.state == state::recording) {
+		if (key == cocos2d::enumKeyCodes::KEY_V && recorder.state == state::recording) {
 			if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
 				if (Mod::get()->getSettingValue<bool>("frame_stepper")) stepFrame = true;
 				else {
@@ -1440,6 +1481,7 @@ class $modify(CCKeyboardDispatcher) {
 						addButton("disable_fs_btn");
 				} 
 			}
+			holdV = hold;
 		}
 
 		if (key == cocos2d::enumKeyCodes::KEY_B && hold && !p && recorder.state == state::recording) {
