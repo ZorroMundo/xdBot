@@ -1382,11 +1382,12 @@ class $modify(EndLevelLayer) {
 			auto winSize = CCDirector::sharedDirector()->getWinSize();
 			CCSprite* sprite = nullptr;
 			sprite = CCSprite::createWithSpriteFrameName("GJ_playBtn2_001.png");
+			sprite->setScale(0.350f);
         	auto btn = CCMenuItemSpriteExtra::create(sprite,
 			this,
 			menu_selector(RecordLayer::openMenu));
 
-			btn->setPosition(winSize/2 + CCPOINT_CREATE(-winSize.width/2, -winSize.height/2) + CCPOINT_CREATE(442, 61));
+			btn->setPosition(winSize/2 + CCPOINT_CREATE(-winSize.width/2, -winSize.height/2) + CCPOINT_CREATE(447, 60));
 
 			auto layer = reinterpret_cast<CCLayer*>(this->getChildren()->objectAtIndex(0));
 			auto menu = CCMenu::create();
@@ -1422,7 +1423,7 @@ class $modify(CCScheduler) {
 		if (recorder.state == state::off) return CCScheduler::update(dt);
 
 		if (holdV) holdCooldown++;
-		if (holdCooldown > 15 * (recorder.fps/60)) {
+		if (holdCooldown > 60) {
 			if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
 				if (Mod::get()->getSettingValue<bool>("frame_stepper")) stepFrame = true;
 				else {
@@ -1462,7 +1463,7 @@ class $modify(CCScheduler) {
         	}
     	}
     leftOver += (dt - dt2 * mult); 
-	if (recorder.state == state::playing && leftOver > 1) {
+	if (recorder.state == state::playing) {
 		syncCooldown++;
 		if (syncCooldown >= 20) {
 			syncCooldown = 0;
