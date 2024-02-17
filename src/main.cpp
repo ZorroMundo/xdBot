@@ -33,7 +33,6 @@ bool lastHold = false;
 bool playingAction = false;
 bool shouldPlay = false;
 bool shouldPlay2 = false;
-bool hasFixes = false;
 bool holdV = false;
 
 const int playerEnums[2][3] = {
@@ -424,7 +423,6 @@ public:
 				if (recorder.macro.empty()) {
 					recorder.android = false;
 					recorder.fps = fpsArr[fpsIndex];
-					if (isAndroid) hasFixes = false;
 				}
 					
 				restart = true;
@@ -536,7 +534,6 @@ void saveMacroPopup::saveMacro(CCObject*) {
 }
 
 void macroCell::handleLoad(CCObject* btn) {
-	hasFixes = false;
 	std::string loadPath = Mod::get()->getSaveDir().string()
     +slash+static_cast<CCMenuItemSpriteExtra*>(btn)->getID() + ".xd";
 	recorder.macro.clear();
@@ -602,7 +599,6 @@ void macroCell::handleLoad(CCObject* btn) {
 					(double)p2xSpeed,
 					(double)p2ySpeed,
 				};
-				if ((bool)posOnly && !hasFixes && isAndroid) hasFixes = true;
 				recorder.macro.push_back({(bool)player1, (int)frame, (int)button, (bool)holding, (bool)posOnly, p1, p2});
 			}
 		} else if (count < 1) {
@@ -953,7 +949,7 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else if (recorder.state == state::playing) {
 			GJBaseGameLayer::handleButton(holding,button,player1);
-			if (androidAction != nullptr && !hasFixes) {
+			if (androidAction != nullptr) {
 			if (androidAction->p1.xPos != 0) {
 				if (!areEqual(this->m_player1->getPositionX(), androidAction->p1.xPos) ||
 				!areEqual(this->m_player1->getPositionY(), androidAction->p1.yPos))
@@ -1177,7 +1173,7 @@ if (recorder.state == state::playing && isAndroid) {
 
 					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
 					static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)]
-					[((currentActionIndex.button < 4) ? currentActionIndex.button : 1)-1]),
+					[((currentActionIndex.button < 4 && currentActionIndex.button > 0) ? currentActionIndex.button : 1)-1]),
 					currentActionIndex.holding, false);
 
 				}
@@ -1285,7 +1281,7 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 
 					self->handleButton(
     				currentActionIndex.holding,
-    				((currentActionIndex.button < 4) ? currentActionIndex.button : 1),
+    				((currentActionIndex.button < 4 && currentActionIndex.button > 0) ? currentActionIndex.button : 1),
     				currentActionIndex.player1
 					);
 
@@ -1364,7 +1360,6 @@ class $modify(PlayLayer) {
 
 				recorder.android = false;
 				recorder.fps = fpsArr[fpsIndex];
-				hasFixes = false;
 			} 
    		}
 	}
@@ -1427,7 +1422,7 @@ class $modify(CCScheduler) {
 		if (recorder.state == state::off) return CCScheduler::update(dt);
 
 		if (holdV) holdCooldown++;
-		if (holdCooldown > (recorder.fps/8) / (recorder.fps/240)) {
+		if (holdCooldown > (recorder.fps/4) * (recorder.fps/60)) {
 			if (!Mod::get()->getSettingValue<bool>("disable_frame_stepper")) {
 				if (Mod::get()->getSettingValue<bool>("frame_stepper")) stepFrame = true;
 				else {
