@@ -857,6 +857,7 @@ void addLabel(const char* text) {
 }
 
 void checkUI() {
+	log::debug("checked");
 	if (frameLabel != nullptr) {
 				if (!Mod::get()->getSettingValue<bool>("show_frame_label")) {
 					frameLabel->removeFromParent();
