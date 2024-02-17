@@ -599,7 +599,8 @@ void macroCell::handleLoad(CCObject* btn) {
 					(double)p2xSpeed,
 					(double)p2ySpeed,
 				};
-				recorder.macro.push_back({(bool)player1, (int)frame, (int)button, (bool)holding, (bool)posOnly, p1, p2});
+				if (!((bool)posOnly))
+					recorder.macro.push_back({(bool)player1, (int)frame, (int)button, (bool)holding, (bool)posOnly, p1, p2});
 			}
 		} else if (count < 1) {
 			std::wstring andStr;
