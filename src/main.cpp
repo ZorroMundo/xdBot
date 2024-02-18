@@ -1403,11 +1403,17 @@ class $modify(PlayLayer) {
 							} else break;
     					}
 					if (recorder.macro.back().holding) {
+						playerData p1;
+						p1.xPos = 0;
+						playerData p2;
                 	recorder.macro.push_back({
 						recorder.macro.back().player1,
 						frame,
 						recorder.macro.back().button,
-						false
+						false,
+						true,
+						p1,
+						p2
 					});
 					}
 				}
@@ -1427,7 +1433,7 @@ class $modify(PlayLayer) {
 	void levelComplete() {
 		PlayLayer::levelComplete();
 		if (stateLabel!=nullptr) stateLabel->removeFromParent();
-		if (recorder.state == state::recording)
+		if (recorder.state != state::off)
 			shouldPlay2 = true;
 		
 		clearState(true);
@@ -1522,7 +1528,7 @@ class $modify(CCScheduler) {
     leftOver += (dt - dt2 * mult); 
 	if (recorder.state == state::playing) {
 		syncCooldown++;
-		if (syncCooldown >= 20) {
+		if (syncCooldown >= 20 && leftOver > 1) {
 			syncCooldown = 0;
 			recorder.syncMusic();
 		}
