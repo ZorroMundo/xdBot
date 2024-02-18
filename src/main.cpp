@@ -160,7 +160,7 @@ public:
 	}
 	void recordAction(bool holding, int button, bool player1, int frame, GJBaseGameLayer* bgl, playerData p1Data, playerData p2Data) {
 		bool realp1;
-		if (isAndroid) 
+		if (isAndroid && bgl != nullptr) 
 			realp1 = (GameManager::get()->getGameVariable("0010") && !bgl->m_levelSettings->m_platformerMode) ? !player1 : player1;
 		else realp1 = player1;
 		
@@ -179,7 +179,7 @@ CCLabelBMFont* fpsLabel = nullptr;
 protected:
     bool setup(std::string const& value) override {
         auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
-		auto versionLabel = CCLabelBMFont::create("xdBot v1.4.5 - made by Zilko", "chatFont.fnt");
+		auto versionLabel = CCLabelBMFont::create("xdBot v1.4.6 - made by Zilko", "chatFont.fnt");
 		versionLabel->setOpacity(60);
 		versionLabel->setAnchorPoint(ccp(0.0f,0.5f));
 		versionLabel->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(3, 6));
@@ -409,7 +409,15 @@ public:
 		if (recorder.state == state::recording) recording->toggle(false);
     	recorder.state = (recorder.state == state::playing) ? state::off : state::playing;
 
-		if (recorder.state == state::playing) restart = true;
+		if (recorder.state == state::playing) {
+			restart = true;
+			Mod::get()->setSettingValue("speedhack", 1.0);
+			if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
+				FMOD::ChannelGroup* channel;
+    			FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
+				channel->setPitch(1);
+			}
+		}
 		else if (recorder.state == state::off) restart = false;
 		recorder.syncMusic();
 		Mod::get()->setSettingValue("frame_stepper", false);
@@ -599,7 +607,6 @@ void macroCell::handleLoad(CCObject* btn) {
 					(double)p2xSpeed,
 					(double)p2ySpeed,
 				};
-				if (!((bool)posOnly))
 					recorder.macro.push_back({(bool)player1, (int)frame, (int)button, (bool)holding, (bool)posOnly, p1, p2});
 			}
 		} else if (count < 1) {
@@ -664,9 +671,9 @@ void macroCell::loadMacro(CCObject* button) {
 
 void clearState(bool safeMode) {
 	if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
-	FMOD::ChannelGroup* channel;
-    FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
-	channel->setPitch(1);
+		FMOD::ChannelGroup* channel;
+    	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
+		channel->setPitch(1);
 	}
 	
 	recorder.state = state::off;
@@ -757,7 +764,6 @@ void toggleSpeedhack(CCObject*) {
 			prevSpeed = Mod::get()->getSettingValue<double>("speedhack");
 			Mod::get()->setSavedValue<float>("previous_speed", prevSpeed);
 			Mod::get()->setSettingValue("speedhack", 1.0);
-			if (Mod::get()->getSettingValue<bool>("speedhack_audio")) recorder.syncMusic();
 		}
 	}
 }
@@ -1292,6 +1298,7 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 					safeModeEnabled = true;
 					safeMode::updateSafeMode();
 				}
+				log::debug("xd - {}", currentActionIndex.p1.yPos);
 				if (!Mod::get()->getSettingValue<bool>("override_macro_mode") && currentActionIndex.p1.xPos != 0) {
 						if (!areEqual(self->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
 						!areEqual(self->m_player1->getPositionY(), currentActionIndex.p1.yPos))
@@ -1404,17 +1411,24 @@ class $modify(PlayLayer) {
     					}
 					if (recorder.macro.back().holding) {
 						playerData p1;
-						p1.xPos = 0;
 						playerData p2;
-                	recorder.macro.push_back({
-						recorder.macro.back().player1,
-						frame,
-						recorder.macro.back().button,
-						false,
-						true,
-						p1,
-						p2
-					});
+						p1 = {
+				0.f,
+				0.f,
+				this->m_player1->m_isUpsideDown,
+				-80085,
+				-80085,
+				-80085
+			};
+				p2 = {
+				0.f,
+				0.f,
+				this->m_player2->m_isUpsideDown,
+				-80085,
+				-80085,
+				-80085
+				};
+			recorder.recordAction(false, 1, recorder.macro.back().button, recorder.currentFrame(), nullptr, p1, p2);
 					}
 				}
 				} catch (const std::exception& e) {
@@ -1444,7 +1458,7 @@ class $modify(EndLevelLayer) {
 
 	void customSetup() {
 		EndLevelLayer::customSetup();
-		if (Mod::get()->getSettingValue<bool>("end_button") && shouldPlay2) {
+		if (Mod::get()->getSettingValue<bool>("end_button")) {
 			auto winSize = CCDirector::sharedDirector()->getWinSize();
 			CCSprite* sprite = nullptr;
 			sprite = CCSprite::createWithSpriteFrameName("GJ_playBtn2_001.png");
@@ -1546,7 +1560,6 @@ class $modify(CCKeyboardDispatcher) {
 					prevSpeed = Mod::get()->getSettingValue<double>("speedhack");
 					Mod::get()->setSavedValue<float>("previous_speed", prevSpeed);
 					Mod::get()->setSettingValue("speedhack", 1.0);
-					if (Mod::get()->getSettingValue<bool>("speedhack_audio")) recorder.syncMusic();
 				}
 			}
 		}
