@@ -1298,7 +1298,6 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 					safeModeEnabled = true;
 					safeMode::updateSafeMode();
 				}
-				log::debug("{} - {}", currentActionIndex.frame, std::to_string(currentActionIndex.p1.yPos));
 				if (!Mod::get()->getSettingValue<bool>("override_macro_mode") && currentActionIndex.p1.xPos != 0) {
 						if (!areEqual(self->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
 						!areEqual(self->m_player1->getPositionY(), currentActionIndex.p1.yPos))
@@ -1349,6 +1348,17 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
     				currentActionIndex.holding,
     				((currentActionIndex.button < 4 && currentActionIndex.button > 0) ? currentActionIndex.button : 1),
     				currentActionIndex.player1
+					);
+
+					if (currentActionIndex.holding) lastHold = true;
+					else lastHold = false;
+				} else if (currentActionIndex.p1.xPos == 0) {
+					playingAction = true;
+
+					self->handleButton(
+    				false,
+    				1,
+    				true
 					);
 
 					if (currentActionIndex.holding) lastHold = true;
