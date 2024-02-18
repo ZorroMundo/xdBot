@@ -1292,6 +1292,7 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 			int frame = recorder.currentFrame();
         	while (recorder.currentAction < static_cast<int>(recorder.macro.size()) &&
 			frame >= recorder.macro[recorder.currentAction].frame && !self->m_player1->m_isDead) {
+				log::debug("{}", frame);
             	auto& currentActionIndex = recorder.macro[recorder.currentAction];
 
 				if (!safeModeEnabled && !isAndroid) {
