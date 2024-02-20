@@ -680,7 +680,7 @@ void clearState(bool safeMode) {
 	recorder.state = state::off;
 
 	playingAction = false;
-	playedMacro = false;
+
 	if (isAndroid) {
 		if (disableFSBtn != nullptr) {
 			disableFSBtn->removeFromParent();
@@ -722,6 +722,7 @@ void clearState(bool safeMode) {
 	Mod::get()->setSettingValue("frame_stepper", false);
 	if (!safeMode && !isAndroid && Mod::get()->getSettingValue<bool>("auto_safe_mode")) {
 		safeModeEnabled = false;
+		playedMacro = false;
 		safeMode::updateSafeMode();
 	}
 }
@@ -1497,12 +1498,12 @@ class $modify(EndLevelLayer) {
 		if ((!Mod::get()->getSettingValue<bool>("auto_safe_mode") || isAndroid) && playedMacro) {
 			auto winSize = CCDirector::sharedDirector()->getWinSize();
 			auto layer = reinterpret_cast<CCLayer*>(this->getChildren()->objectAtIndex(0));
-			auto versionLabel = CCLabelBMFont::create("Recorded with xdBot.", "chatFont.fnt");
-			versionLabel->setOpacity(60);
-			versionLabel->setAnchorPoint(ccp(0.0f,0.5f));
-			versionLabel->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(3, 6));
-			versionLabel->setScale(0.5f);
-			layer->addChild(versionLabel);
+			auto watermarkxd = CCLabelBMFont::create("Recorded with xdBot.", "chatFont.fnt");
+			watermarkxd->setOpacity(60);
+			watermarkxd->setAnchorPoint(ccp(0.0f,0.5f));
+			watermarkxd->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(3, 6));
+			watermarkxd->setScale(0.5f);
+			layer->addChild(watermarkxd);
 		}
 	}
 
