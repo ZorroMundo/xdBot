@@ -1,5 +1,6 @@
 #include <Geode/modify/PauseLayer.hpp>
 #include <Geode/modify/PlayLayer.hpp>
+#include <Geode/modify/CheckpointObject.hpp>
 #include <Geode/modify/EndLevelLayer.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/CCKeyboardDispatcher.hpp>
@@ -1040,6 +1041,8 @@ class $modify(PauseLayer) {
 
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
+		if (button != 1 && recorder.state == state::recording)
+			this->m_player1->m_yVelocity = 50;
 		if (!isAndroid) {
 if ((recorder.state == state::playing && playingAction) || recorder.state != state::playing) GJBaseGameLayer::handleButton(holding,button,player1);
 }
@@ -1242,6 +1245,7 @@ if (recorder.state == state::playing && isAndroid) {
 					: 0;
 
 					playingAction = true;
+					playedMacro = true;
 
 					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
 					static_cast<cocos2d::enumKeyCodes>(playerEnums[player]
@@ -1305,6 +1309,7 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 					safeModeEnabled = true;
 					safeMode::updateSafeMode();
 				}
+				playedMacro = true;
 				if (!Mod::get()->getSettingValue<bool>("override_macro_mode") && currentActionIndex.p1.xPos != 0) {
 						if (!areEqual(self->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
 						!areEqual(self->m_player1->getPositionY(), currentActionIndex.p1.yPos))
@@ -1427,8 +1432,8 @@ class $modify(PlayLayer) {
 								}
 							} else break;
     					}
-					if ((recorder.macro.back().holding ||
-					(recorder.macro[recorder.macro.size() - 2].holding && !recorder.macro[recorder.macro.size() - 2].player1)) && isAndroid) {
+					if (recorder.macro.back().holding ||
+					(recorder.macro[recorder.macro.size() - 2].holding && !recorder.macro[recorder.macro.size() - 2].player1)) {
 						playerData p1;
 						playerData p2;
 						p1 = {
@@ -1530,6 +1535,8 @@ int syncCooldown = 0;
 int holdCooldown = 0;
 class $modify(CCScheduler) {
 	void update(float dt) {
+		if (PlayLayer::get())
+			log::debug("{}", PlayLayer::get()->m_player1->m_yVelocity);
 		if (recorder.state == state::off) return CCScheduler::update(dt);
 
 		if (holdV) holdCooldown++;
