@@ -152,16 +152,18 @@ public:
 		return static_cast<int>((*(double*)(((char*)PlayLayer::get()) + offset)) * fps2);
 	}
 	void syncMusic() {
+		auto playLayer = PlayLayer::get();
+		if (playLayer->m_levelSettings->m_platformerMode) return;
 		FMODAudioEngine::sharedEngine()->setMusicTimeMS(
-			(currentFrame()*1000)/240 + PlayLayer::get()->m_levelSettings->m_songOffset*1000,
+			(currentFrame()*1000)/240 + playLayer->m_levelSettings->m_songOffset*1000,
 			true,
 			0
 		);
 	}
-	void recordAction(bool holding, int button, bool player1, int frame, GJBaseGameLayer* bgl, playerData p1Data, playerData p2Data) {
+	void recordAction(bool holding, int button, bool player1, int frame, PlayLayer* playLayer, playerData p1Data, playerData p2Data) {
 		bool realp1;
-		if (isAndroid && bgl != nullptr) 
-			realp1 = (GameManager::get()->getGameVariable("0010") && !bgl->m_levelSettings->m_platformerMode) ? !player1 : player1;
+		if (isAndroid) 
+			realp1 = (GameManager::get()->getGameVariable("0010") && !playLayer->m_levelSettings->m_platformerMode) ? !player1 : player1;
 		else realp1 = player1;
 		
     	macro.push_back({realp1, frame, button, holding, false, p1Data, p2Data});
@@ -179,7 +181,7 @@ CCLabelBMFont* fpsLabel = nullptr;
 protected:
     bool setup(std::string const& value) override {
         auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
-		auto versionLabel = CCLabelBMFont::create("xdBot v1.4.7 - made by Zilko", "chatFont.fnt");
+		auto versionLabel = CCLabelBMFont::create("xdBot v1.4.8 - made by Zilko", "chatFont.fnt");
 		versionLabel->setOpacity(60);
 		versionLabel->setAnchorPoint(ccp(0.0f,0.5f));
 		versionLabel->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(3, 6));
@@ -419,7 +421,6 @@ public:
 			}
 		}
 		else if (recorder.state == state::off) restart = false;
-		recorder.syncMusic();
 		Mod::get()->setSettingValue("frame_stepper", false);
 	}
 
@@ -437,7 +438,6 @@ public:
 				updateInfo();
 			} else if (recorder.state == state::off) {
 				restart = false;
-				recorder.syncMusic();
 				Mod::get()->setSettingValue("frame_stepper", false);
 			}
 	}
@@ -718,7 +718,7 @@ playingAction = false;
 	}
 	
 	Mod::get()->setSettingValue("frame_stepper", false);
-	if (!safeMode && !isAndroid) {
+	if (!safeMode && !isAndroid && Mod::get()->getSettingValue<bool>("auto_safe_mode")) {
 		safeModeEnabled = false;
 		safeMode::updateSafeMode();
 	}
@@ -1066,7 +1066,7 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 				p2.xPos = 0;
 			}
 			int frame = recorder.currentFrame(); 
-			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
+			recorder.recordAction(holding, button, player1, frame, PlayLayer::get(), p1, p2);
 		} else if (recorder.state == state::playing) {
 			GJBaseGameLayer::handleButton(holding,button,player1);
 			if (androidAction != nullptr) {
@@ -1140,13 +1140,13 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 				-80085
 				};
 		}
-			recorder.recordAction(holding, button, player1, recorder.currentFrame(), this, p1, p2);
+			recorder.recordAction(holding, button, player1, recorder.currentFrame(), PlayLayer::get(), p1, p2);
 }
 	}
 
 	int getPlayer1(int p1, GJBaseGameLayer* bgl) {
 		bool player1;
-		if (GameManager::get()->getGameVariable("0010") && !bgl->m_levelSettings->m_platformerMode) player1 = !p1;
+		if (GameManager::get()->getGameVariable("0010") && !bgl->m_levelSettings->m_platformerMode && bgl->m_levelSettings->m_twoPlayerMode) player1 = !p1;
 		else player1 = p1;
 		return static_cast<int>(player1);
 	}
@@ -1292,10 +1292,9 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 			int frame = recorder.currentFrame();
         	while (recorder.currentAction < static_cast<int>(recorder.macro.size()) &&
 			frame >= recorder.macro[recorder.currentAction].frame && !self->m_player1->m_isDead) {
-				log::debug("{}", frame);
             	auto& currentActionIndex = recorder.macro[recorder.currentAction];
 
-				if (!safeModeEnabled && !isAndroid) {
+				if (!safeModeEnabled && !isAndroid && Mod::get()->getSettingValue<bool>("auto_safe_mode")) {
 					safeModeEnabled = true;
 					safeMode::updateSafeMode();
 				}
@@ -1391,7 +1390,7 @@ class $modify(PlayLayer) {
 
 		if (isAndroid) androidAction = nullptr;
 
-		if (safeModeEnabled && !isAndroid) {
+		if (safeModeEnabled && !isAndroid && Mod::get()->getSettingValue<bool>("auto_safe_mode")) {
 			safeModeEnabled = false;
 			safeMode::updateSafeMode();
 		}
@@ -1424,22 +1423,22 @@ class $modify(PlayLayer) {
 						playerData p1;
 						playerData p2;
 						p1 = {
-				0.f,
-				0.f,
-				this->m_player1->m_isUpsideDown,
-				-80085,
-				-80085,
-				-80085
-			};
-				p2 = {
-				0.f,
-				0.f,
-				this->m_player2->m_isUpsideDown,
-				-80085,
-				-80085,
-				-80085
-				};
-			recorder.recordAction(false, 1, recorder.macro.back().button, recorder.currentFrame(), nullptr, p1, p2);
+							0.f,
+							0.f,
+							this->m_player1->m_isUpsideDown,
+							-80085,
+							-80085,
+							-80085
+						};
+						p2 = {
+							0.f,
+							0.f,
+							this->m_player2->m_isUpsideDown,
+							-80085,
+							-80085,
+							-80085
+						};
+						recorder.recordAction(false, 1, recorder.macro.back().button, recorder.currentFrame(), this, p1, p2);
 					}
 				}
 				} catch (const std::exception& e) {
@@ -1486,6 +1485,16 @@ class $modify(EndLevelLayer) {
         	menu->addChild(btn);
 			layer->addChild(menu);
 		}
+		if (!Mod::get()->getSettingValue<bool>("auto_safe_mode")) {
+			auto winSize = CCDirector::sharedDirector()->getWinSize();
+			auto layer = reinterpret_cast<CCLayer*>(this->getChildren()->objectAtIndex(0));
+			auto versionLabel = CCLabelBMFont::create("Recorded With xdBot.", "chatFont.fnt");
+			versionLabel->setOpacity(60);
+			versionLabel->setAnchorPoint(ccp(0.0f,0.5f));
+			versionLabel->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(3, 6));
+			versionLabel->setScale(0.5f);
+			layer->addChild(versionLabel);
+		}
 	}
 
 	void onReplay(CCObject* s) {
@@ -1511,6 +1520,7 @@ int syncCooldown = 0;
 int holdCooldown = 0;
 class $modify(CCScheduler) {
 	void update(float dt) {
+		log::debug("{}", safeModeEnabled);
 		if (recorder.state == state::off) return CCScheduler::update(dt);
 
 		if (holdV) holdCooldown++;
@@ -1551,7 +1561,7 @@ class $modify(CCScheduler) {
         	}
     	}
     leftOver += (dt - dt2 * mult); 
-	if (recorder.state == state::playing) {
+	if (recorder.state == state::playing && !PlayLayer::get()->m_levelSettings->m_platformerMode) {
 		syncCooldown++;
 		if (syncCooldown >= 20 && leftOver > 1) {
 			syncCooldown = 0;
@@ -1606,9 +1616,8 @@ $execute {
 		fpsIndex = Mod::get()->getSavedValue<float>("previous_fps");
 	else if (isAndroid)
 		fpsIndex = 0;
-	else {
+	else
 		fpsIndex = 3;
-	}
 
 	recorder.fps = fpsArr[fpsIndex];
 
