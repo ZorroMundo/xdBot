@@ -1232,7 +1232,7 @@ if (recorder.state == state::playing && isAndroid) {
 				androidAction = &currentActionIndex;
 				
 				if (!currentActionIndex.posOnly) {
-					int player = (this->m_levelSettings->m_twoPlayerMode || GameManager::get()->getGameVariable("0011"))
+					int player = (this->m_levelSettings->m_twoPlayerMode)
 					? getPlayer1(currentActionIndex.player1, this)
 					: 0;
 
@@ -1525,7 +1525,6 @@ int syncCooldown = 0;
 int holdCooldown = 0;
 class $modify(CCScheduler) {
 	void update(float dt) {
-		log::debug("{}", safeModeEnabled);
 		if (recorder.state == state::off) return CCScheduler::update(dt);
 
 		if (holdV) holdCooldown++;
