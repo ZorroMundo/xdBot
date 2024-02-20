@@ -79,11 +79,7 @@ using opcode = std::pair<unsigned long, std::vector<uint8_t>>;
 		{ 0x2E6B32, { 0xEB, 0x0D } },
 		{ 0x2E69F4, { 0x0F, 0x4C, 0xC1 } },
 		{ 0x2E6993, { 0x90, 0xE9, 0x85, 0x01, 0x00, 0x00 } },
-
-		{ 0x2EACD0, { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 } },
-		{ 0x2EACD6, { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 } }, 
-		{ 0x2EACF7, { 0x90 } },
-
+		
 		{ 0x2EA81F, { 0x6A, 0x00 } },
 		{ 0x2EA83D, { 0x90 } }
 	};
@@ -160,10 +156,10 @@ public:
 			0
 		);
 	}
-	void recordAction(bool holding, int button, bool player1, int frame, PlayLayer* playLayer, playerData p1Data, playerData p2Data) {
+	void recordAction(bool holding, int button, bool player1, int frame, GJBaseGameLayer* bgl, playerData p1Data, playerData p2Data) {
 		bool realp1;
 		if (isAndroid) 
-			realp1 = (GameManager::get()->getGameVariable("0010") && !playLayer->m_levelSettings->m_platformerMode) ? !player1 : player1;
+			realp1 = (GameManager::get()->getGameVariable("0010") && !bgl->m_levelSettings->m_platformerMode) ? !player1 : player1;
 		else realp1 = player1;
 		
     	macro.push_back({realp1, frame, button, holding, false, p1Data, p2Data});
@@ -1066,7 +1062,7 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 				p2.xPos = 0;
 			}
 			int frame = recorder.currentFrame(); 
-			recorder.recordAction(holding, button, player1, frame, PlayLayer::get(), p1, p2);
+			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else if (recorder.state == state::playing) {
 			GJBaseGameLayer::handleButton(holding,button,player1);
 			if (androidAction != nullptr) {
@@ -1126,7 +1122,7 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 				p1 = {
 				0.f,
 				0.f,
-				this->m_player1->m_isUpsideDown,
+				false,
 				-80085,
 				-80085,
 				-80085
@@ -1134,13 +1130,13 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 				p2 = {
 				0.f,
 				0.f,
-				this->m_player2->m_isUpsideDown,
+				false,
 				-80085,
 				-80085,
 				-80085
 				};
 		}
-			recorder.recordAction(holding, button, player1, recorder.currentFrame(), PlayLayer::get(), p1, p2);
+			recorder.recordAction(holding, button, player1, recorder.currentFrame(), this, p1, p2);
 }
 	}
 
@@ -1419,13 +1415,14 @@ class $modify(PlayLayer) {
 								}
 							} else break;
     					}
-					if (recorder.macro.back().holding) {
+					if ((recorder.macro.back().holding ||
+					(recorder.macro[recorder.macro.size() - 2].holding && !recorder.macro[recorder.macro.size() - 2].player1)) && isAndroid) {
 						playerData p1;
 						playerData p2;
 						p1 = {
 							0.f,
 							0.f,
-							this->m_player1->m_isUpsideDown,
+							false,
 							-80085,
 							-80085,
 							-80085
@@ -1433,12 +1430,14 @@ class $modify(PlayLayer) {
 						p2 = {
 							0.f,
 							0.f,
-							this->m_player2->m_isUpsideDown,
+							false,
 							-80085,
 							-80085,
 							-80085
 						};
-						recorder.recordAction(false, 1, recorder.macro.back().button, recorder.currentFrame(), this, p1, p2);
+						//recorder.recordAction(false, 1, recorder.macro.back().button, recorder.currentFrame(), this, p1, p2);
+						recorder.macro.push_back({false, recorder.currentFrame(), 1, false, false, p1, p2});
+						recorder.macro.push_back({true, recorder.currentFrame(), 1, false, false, p1, p2});
 					}
 				}
 				} catch (const std::exception& e) {
@@ -1456,7 +1455,7 @@ class $modify(PlayLayer) {
 
 	void levelComplete() {
 		PlayLayer::levelComplete();
-		if (stateLabel!=nullptr) stateLabel->removeFromParent();
+		if (stateLabel != nullptr) stateLabel->removeFromParent();
 		if (recorder.state != state::off)
 			shouldPlay2 = true;
 		
