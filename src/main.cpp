@@ -34,6 +34,7 @@ bool playingAction = false;
 bool shouldPlay = false;
 bool shouldPlay2 = false;
 bool holdV = false;
+bool playedMacro = false;
 
 const int playerEnums[2][3] = {
     {cocos2d::enumKeyCodes::KEY_ArrowUp, cocos2d::enumKeyCodes::KEY_ArrowLeft, cocos2d::enumKeyCodes::KEY_ArrowRight}, 
@@ -674,7 +675,8 @@ void clearState(bool safeMode) {
 	
 	recorder.state = state::off;
 
-playingAction = false;
+	playingAction = false;
+	playedMacro = false;
 	if (isAndroid) {
 		if (disableFSBtn != nullptr) {
 			disableFSBtn->removeFromParent();
@@ -1230,17 +1232,21 @@ if (recorder.state == state::playing && isAndroid) {
 				androidAction = &currentActionIndex;
 				
 				if (!currentActionIndex.posOnly) {
+					int player = (this->m_levelSettings->m_twoPlayerMode || GameManager::get()->getGameVariable("0011"))
+					? getPlayer1(currentActionIndex.player1, this)
+					: 0;
+
 					playingAction = true;
 
 					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
-					static_cast<cocos2d::enumKeyCodes>(playerEnums[getPlayer1(currentActionIndex.player1, this)]
+					static_cast<cocos2d::enumKeyCodes>(playerEnums[player]
 					[((currentActionIndex.button < 4 && currentActionIndex.button > 0) ? currentActionIndex.button : 1)-1]),
 					currentActionIndex.holding, false);
 
 				}
             	recorder.currentAction++;
         	}
-playingAction = false;
+			playingAction = false;
 			if (recorder.currentAction >= recorder.macro.size()) {
 				if (stateLabel!=nullptr) stateLabel->removeFromParent();
 				clearState(false);
@@ -1375,7 +1381,6 @@ class $modify(PlayLayer) {
 	void resetLevel() {
 		PlayLayer::resetLevel();
 		if (recorder.state != state::off && restart != false) {
-			leftOver = 0.f;
 			restart = false;
 		}
 		
@@ -1391,9 +1396,11 @@ class $modify(PlayLayer) {
 			safeMode::updateSafeMode();
 		}
 		
+		if (!Mod::get()->getSettingValue<bool>("auto_safe_mode")) playedMacro = false;
+
 
 		if (recorder.state == state::playing) {
-		playingAction = false;
+			playingAction = false;
 			recorder.currentAction = 0;
 			if (Mod::get()->getSettingValue<bool>("speedhack_audio")) {
 			FMOD::ChannelGroup* channel;
@@ -1435,7 +1442,6 @@ class $modify(PlayLayer) {
 							-80085,
 							-80085
 						};
-						//recorder.recordAction(false, 1, recorder.macro.back().button, recorder.currentFrame(), this, p1, p2);
 						recorder.macro.push_back({false, recorder.currentFrame(), 1, false, false, p1, p2});
 						recorder.macro.push_back({true, recorder.currentFrame(), 1, false, false, p1, p2});
 					}
@@ -1484,10 +1490,10 @@ class $modify(EndLevelLayer) {
         	menu->addChild(btn);
 			layer->addChild(menu);
 		}
-		if (!Mod::get()->getSettingValue<bool>("auto_safe_mode")) {
+		if ((!Mod::get()->getSettingValue<bool>("auto_safe_mode") || isAndroid) && playedMacro) {
 			auto winSize = CCDirector::sharedDirector()->getWinSize();
 			auto layer = reinterpret_cast<CCLayer*>(this->getChildren()->objectAtIndex(0));
-			auto versionLabel = CCLabelBMFont::create("Recorded With xdBot.", "chatFont.fnt");
+			auto versionLabel = CCLabelBMFont::create("Recorded with xdBot.", "chatFont.fnt");
 			versionLabel->setOpacity(60);
 			versionLabel->setAnchorPoint(ccp(0.0f,0.5f));
 			versionLabel->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(3, 6));
