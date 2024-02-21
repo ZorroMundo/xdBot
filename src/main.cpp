@@ -12,6 +12,9 @@
 #include <chrono>
 #include "fileSystem.hpp"
 
+#define MEMBERBYOFFSET(type, class, offset) *reinterpret_cast<type*>(reinterpret_cast<uintptr_t>(class) + offset)
+#define MBO MEMBERBYOFFSET
+
 float leftOver = 0.f; // For CCScheduler
 
 double prevSpeed = 1.0f;
@@ -1041,8 +1044,6 @@ class $modify(PauseLayer) {
 
 class $modify(GJBaseGameLayer) {
 	void handleButton(bool holding, int button, bool player1) {
-		if (button != 1 && recorder.state == state::recording)
-			this->m_player1->m_yVelocity = 50;
 		if (!isAndroid) {
 if ((recorder.state == state::playing && playingAction) || recorder.state != state::playing) GJBaseGameLayer::handleButton(holding,button,player1);
 }
@@ -1535,8 +1536,6 @@ int syncCooldown = 0;
 int holdCooldown = 0;
 class $modify(CCScheduler) {
 	void update(float dt) {
-		if (PlayLayer::get())
-			log::debug("{}", PlayLayer::get()->m_player1->m_yVelocity);
 		if (recorder.state == state::off) return CCScheduler::update(dt);
 
 		if (holdV) holdCooldown++;
@@ -1581,7 +1580,6 @@ class $modify(CCScheduler) {
 		syncCooldown++;
 		if (syncCooldown >= 20 && leftOver > 1) {
 			syncCooldown = 0;
-			recorder.syncMusic();
 		}
 	}
 	}
