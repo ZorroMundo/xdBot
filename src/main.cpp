@@ -1094,6 +1094,7 @@ class $modify(PauseLayer) {
 
 class $modify(PlayerObject) {
 void playerDestroyed(bool p0) {
+	if (isAndroid) androidAction = nullptr;
 	if (Mod::get()->getSettingValue<bool>("noclip"))
 		return;
 	if (Mod::get()->getSettingValue<bool>("instant_respawn"))
