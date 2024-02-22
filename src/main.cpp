@@ -123,6 +123,14 @@ struct playerData {
 	double ySpeed;
 };
 
+struct checkpointData {
+	float xPos;
+	float yPos;
+	float rotationSpeed;
+	double xSpeed;
+	double ySpeed;
+};
+
 struct data {
     bool player1;
     int frame;
@@ -1315,6 +1323,7 @@ if (recorder.state == state::playing && isAndroid) {
 				}
             	recorder.currentAction++;
         	}
+			androidAction = nullptr;
 			if (recorder.currentAction >= recorder.macro.size()) {
 				if (stateLabel!=nullptr) stateLabel->removeFromParent();
 				clearState(false);
