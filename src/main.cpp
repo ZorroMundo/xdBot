@@ -1155,6 +1155,7 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 
 				}
 			}
+			androidAction = nullptr;
 			}
 		}
 		} else GJBaseGameLayer::handleButton(holding,button,player1);
@@ -1323,7 +1324,6 @@ if (recorder.state == state::playing && isAndroid) {
 				}
             	recorder.currentAction++;
         	}
-			androidAction = nullptr;
 			if (recorder.currentAction >= recorder.macro.size()) {
 				if (stateLabel!=nullptr) stateLabel->removeFromParent();
 				clearState(false);
