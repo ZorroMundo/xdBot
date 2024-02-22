@@ -1,8 +1,8 @@
 #include <Geode/modify/PauseLayer.hpp>
 #include <Geode/modify/PlayLayer.hpp>
-#include <Geode/modify/CheckpointObject.hpp>
 #include <Geode/modify/EndLevelLayer.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
+#include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/CCKeyboardDispatcher.hpp>
 #include <Geode/binding/GameManager.hpp>
 #include <Geode/modify/CCScheduler.hpp>
@@ -11,9 +11,6 @@
 #include <vector>
 #include <chrono>
 #include "fileSystem.hpp"
-
-#define MEMBERBYOFFSET(type, class, offset) *reinterpret_cast<type*>(reinterpret_cast<uintptr_t>(class) + offset)
-#define MBO MEMBERBYOFFSET
 
 float leftOver = 0.f; // For CCScheduler
 
@@ -172,6 +169,50 @@ public:
 		else realp1 = player1;
 		
     	macro.push_back({realp1, frame, button, holding, false, p1Data, p2Data});
+	}
+
+	void eraseActions(PlayLayer* pl) {
+  		int frame = currentFrame(); 
+		if (pl->m_isPracticeMode && !macro.empty() && frame != 0) {
+				try {
+            	if (!macro.empty()) {
+						for (auto it = macro.rbegin(); it != macro.rend(); ++it) {
+        					if (it->frame >= frame) {
+								try {
+									macro.erase((it + 1).base());
+								} catch (const std::exception& e) {
+									log::debug("wtfffff amaze? - {}",e);
+								}
+							} else break;
+    					}
+					if (macro.back().holding ||
+					(macro[macro.size() - 2].holding && !macro[macro.size() - 2].player1)) {
+						playerData p1;
+						playerData p2;
+						p1 = {
+							0.f,
+							0.f,
+							false,
+							-80085,
+							-80085,
+							-80085
+						};
+						p2 = {
+							0.f,
+							0.f,
+							false,
+							-80085,
+							-80085,
+							-80085
+						};
+						macro.push_back({false, currentFrame(), 1, false, false, p1, p2});
+						macro.push_back({true, currentFrame(), 1, false, false, p1, p2});
+					}
+				}
+				} catch (const std::exception& e) {
+					log::debug("wtfffff? - {}",e);
+				}
+        	}
 	}
 
 };
@@ -612,6 +653,7 @@ void macroCell::handleLoad(CCObject* btn) {
 					(double)p2xSpeed,
 					(double)p2ySpeed,
 				};
+				if ((isAndroid && !(bool)posOnly) || !isAndroid)
 					recorder.macro.push_back({(bool)player1, (int)frame, (int)button, (bool)holding, (bool)posOnly, p1, p2});
 			}
 		} else if (count < 1) {
@@ -870,24 +912,24 @@ void addLabel(const char* text) {
 }
 
 void checkUI() {
-	if (frameLabel != nullptr) {
-				if (!Mod::get()->getSettingValue<bool>("show_frame_label")) {
-					frameLabel->removeFromParent();
-					frameLabel = nullptr;
-				}
-			} else if (Mod::get()->getSettingValue<bool>("show_frame_label")) {
-				addLabel("Frame: 0");
-			}
-			if (recorder.state == state::off) {
-			if (frameLabel != nullptr) {
-				frameLabel->removeFromParent();
-				frameLabel = nullptr;
-			}
-			if (stateLabel != nullptr) {
-				stateLabel->removeFromParent();
-				stateLabel = nullptr;
-			}
+	if (recorder.state == state::off) {
+		if (frameLabel != nullptr) {
+			frameLabel->removeFromParent();
+			frameLabel = nullptr;
 		}
+		if (stateLabel != nullptr) {
+			stateLabel->removeFromParent();
+			stateLabel = nullptr;
+		}
+	} else {
+		if (frameLabel != nullptr) {
+		if (!Mod::get()->getSettingValue<bool>("show_frame_label")) {
+			frameLabel->removeFromParent();
+			frameLabel = nullptr;
+		}
+		} else if (Mod::get()->getSettingValue<bool>("show_frame_label"))
+			addLabel("Frame: 0");
+	}
 
 		if (recorder.state != state::recording && isAndroid) {
 			if (disableFSBtn != nullptr) {
@@ -1042,7 +1084,22 @@ class $modify(PauseLayer) {
 
 };
 
+class $modify(PlayerObject) {
+void playerDestroyed(bool p0) {
+	if (Mod::get()->getSettingValue<bool>("noclip"))
+		return;
+	if (Mod::get()->getSettingValue<bool>("instant_respawn"))
+		return PlayLayer::get()->resetLevel();
+	return PlayerObject::playerDestroyed(p0);
+}
+};
+
 class $modify(GJBaseGameLayer) {
+	void toggleFlipped(bool p0, bool p1) {
+		if (Mod::get()->getSettingValue<bool>("instant_mirror"))
+       		return GJBaseGameLayer::toggleFlipped(p0, true);
+		return GJBaseGameLayer::toggleFlipped(p0, p1);
+    }
 	void handleButton(bool holding, int button, bool player1) {
 		if (!isAndroid) {
 if ((recorder.state == state::playing && playingAction) || recorder.state != state::playing) GJBaseGameLayer::handleButton(holding,button,player1);
@@ -1075,8 +1132,9 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else if (recorder.state == state::playing) {
-			GJBaseGameLayer::handleButton(holding,button,player1);
 			if (androidAction != nullptr) {
+				if (androidAction->frame == recorder.currentFrame()) {
+					GJBaseGameLayer::handleButton(holding,button,player1);
 			if (androidAction->p1.xPos != 0) {
 				if (!areEqual(this->m_player1->getPositionX(), androidAction->p1.xPos) ||
 				!areEqual(this->m_player1->getPositionY(), androidAction->p1.yPos))
@@ -1089,8 +1147,9 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 
 				}
 			}
+			}
 		}
-		} else if (recorder.state != state::playing) GJBaseGameLayer::handleButton(holding,button,player1);
+		} else GJBaseGameLayer::handleButton(holding,button,player1);
 
 	} else if (recorder.state == state::recording) {
 			playerData p1;
@@ -1245,18 +1304,17 @@ if (recorder.state == state::playing && isAndroid) {
 					? getPlayer1(currentActionIndex.player1, this)
 					: 0;
 
-					playingAction = true;
 					playedMacro = true;
+					int pBtn = (currentActionIndex.button < 4 && currentActionIndex.button > 0) ? currentActionIndex.button : 1;
 
 					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
 					static_cast<cocos2d::enumKeyCodes>(playerEnums[player]
-					[((currentActionIndex.button < 4 && currentActionIndex.button > 0) ? currentActionIndex.button : 1)-1]),
+					[pBtn-1]),
 					currentActionIndex.holding, false);
 
 				}
             	recorder.currentAction++;
         	}
-			playingAction = false;
 			if (recorder.currentAction >= recorder.macro.size()) {
 				if (stateLabel!=nullptr) stateLabel->removeFromParent();
 				clearState(false);
@@ -1380,7 +1438,7 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 
             	recorder.currentAction++;
         	}
-playingAction = false;
+			playingAction = false;
 			if (recorder.currentAction >= recorder.macro.size()) {
 				if (stateLabel!=nullptr) stateLabel->removeFromParent();
 				clearState(true);
@@ -1389,6 +1447,18 @@ playingAction = false;
 }
 
 class $modify(PlayLayer) {
+
+	void loadFromCheckpoint(CheckpointObject* p) {
+		if (recorder.state == state::recording) {
+			recorder.eraseActions(this);
+		}
+		PlayLayer::loadFromCheckpoint(p);
+	}
+
+	void delayedResetLevel() {
+		if (!Mod::get()->getSettingValue<bool>("instant_respawn") && !Mod::get()->getSettingValue<bool>("noclip"))
+			PlayLayer::delayedResetLevel();
+	}
 	void resetLevel() {
 		PlayLayer::resetLevel();
 		if (recorder.state != state::off && restart != false) {
@@ -1396,6 +1466,7 @@ class $modify(PlayLayer) {
 		}
 		
 		if (recorder.state != state::off) {
+			checkUI();
 			playerHolding = false;
 			leftOver = 0.f;
 		}
@@ -1419,55 +1490,14 @@ class $modify(PlayLayer) {
         	channel->setPitch(1);
 			}
 		} else if (recorder.state != state::off) {
-			checkUI();
-        	if (this->m_isPracticeMode && !recorder.macro.empty() && recorder.currentFrame() != 0) {
-  				int frame = recorder.currentFrame(); 
-				try {
-            	if (!recorder.macro.empty()) {
-						for (auto it = recorder.macro.rbegin(); it != recorder.macro.rend(); ++it) {
-        					if (it->frame >= frame) {
-								try {
-									recorder.macro.erase((it + 1).base());
-								} catch (const std::exception& e) {
-									log::debug("wtfffff amaze? - {}",e);
-								}
-							} else break;
-    					}
-					if (recorder.macro.back().holding ||
-					(recorder.macro[recorder.macro.size() - 2].holding && !recorder.macro[recorder.macro.size() - 2].player1)) {
-						playerData p1;
-						playerData p2;
-						p1 = {
-							0.f,
-							0.f,
-							false,
-							-80085,
-							-80085,
-							-80085
-						};
-						p2 = {
-							0.f,
-							0.f,
-							false,
-							-80085,
-							-80085,
-							-80085
-						};
-						recorder.macro.push_back({false, recorder.currentFrame(), 1, false, false, p1, p2});
-						recorder.macro.push_back({true, recorder.currentFrame(), 1, false, false, p1, p2});
-					}
-				}
-				} catch (const std::exception& e) {
-					log::debug("wtfffff? - {}",e);
-				}
-        	} else {
+			if (recorder.currentFrame() == 0) {
 				if (!recorder.macro.empty())
-					recorder.macro.clear();
+						recorder.macro.clear();
 
 				recorder.android = false;
 				recorder.fps = fpsArr[fpsIndex];
-			} 
-   		}
+			}
+		}
 	}
 
 	void levelComplete() {
@@ -1642,11 +1672,9 @@ $execute {
 
 	if (!isAndroid)
 		Mod::get()->hook(reinterpret_cast<void *>(base::get() + 0x1BD240), &GJBaseGameLayerProcessCommands, "GJBaseGameLayer::processCommands", tulip::hook::TulipConvention::Thiscall);
-	else {
-		if (sizeof(void*) == 8) {
+	else if (sizeof(void*) == 8) {
         	offset = 0x3B8;
     	}
-	}
 
 	for (std::size_t i = 0; i < 15; i++) {
 		safeMode::patches[i] = Mod::get()->patch(reinterpret_cast<void*>(base::get() + std::get<0>(safeMode::codes[i])),
