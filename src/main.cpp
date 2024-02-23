@@ -3,6 +3,8 @@
 #include <Geode/modify/EndLevelLayer.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
+#include <Geode/modify/GameObject.hpp>
+#include <Geode/modify/CheckpointObject.hpp>
 #include <Geode/modify/CCKeyboardDispatcher.hpp>
 #include <Geode/binding/GameManager.hpp>
 #include <Geode/modify/CCScheduler.hpp>
@@ -124,12 +126,12 @@ struct playerData {
 };
 
 struct checkpointData {
-	float xPos;
-	float yPos;
-	float rotationSpeed;
-	double xSpeed;
-	double ySpeed;
+	int frame;
+	playerData p1;
+	playerData p2;
 };
+
+std::map<CheckpointObject*, checkpointData> checkpoints;
 
 struct data {
     bool player1;
@@ -179,8 +181,10 @@ public:
     	macro.push_back({realp1, frame, button, holding, false, p1Data, p2Data});
 	}
 
-	void eraseActions(PlayLayer* pl) {
-  		int frame = currentFrame(); 
+	void eraseActions(PlayLayer* pl, CheckpointObject* cp) {
+		if (!checkpoints.contains(cp)) return;
+
+  		int frame = checkpoints[cp].frame;
 		if (pl->m_isPracticeMode && !macro.empty() && frame != 0) {
 				try {
             	if (!macro.empty()) {
@@ -215,6 +219,12 @@ public:
 						};
 						macro.push_back({false, currentFrame(), 1, false, false, p1, p2});
 						macro.push_back({true, currentFrame(), 1, false, false, p1, p2});
+						if (pl->m_levelSettings->m_platformerMode) {
+							macro.push_back({false, currentFrame(), 2, false, false, p1, p2});
+							macro.push_back({true, currentFrame(), 2, false, false, p1, p2});
+							macro.push_back({false, currentFrame(), 3, false, false, p1, p2});
+							macro.push_back({true, currentFrame(), 3, false, false, p1, p2});
+						}
 					}
 				}
 				} catch (const std::exception& e) {
@@ -228,7 +238,7 @@ public:
 recordSystem recorder;
 
 class RecordLayer : public geode::Popup<std::string const&> {
-CCLabelBMFont* fpsLabel = nullptr;
+	CCLabelBMFont* fpsLabel = nullptr;
  	CCLabelBMFont* infoMacro = nullptr;
  	CCMenuItemToggler* recording = nullptr;
     CCMenuItemToggler* playing = nullptr;
@@ -535,7 +545,6 @@ void saveMacroPopup::openSaveMacro(CCObject*) {
 	 && recorder.state == state::recording) ? true : false;
 	layer->show();
 }
-
 void saveMacroPopup::saveMacro(CCObject*) {
   if (std::string(macroNameInput->getString()).length() < 1) {
 		FLAlertLayer::create(
@@ -711,7 +720,14 @@ void macroCell::handleLoad(CCObject* btn) {
     "OK"      
 	)->show();
 }
+class $modify(GameObject) {
+    void setVisible(bool v) {
+		if (!Mod::get()->getSettingValue<bool>("layout_mode") || recorder.state == state::off) return GameObject::setVisible(v);
 
+        if (m_objectID != 44 && m_objectType == GameObjectType::Decoration) GameObject::setVisible(false);
+        else GameObject::setVisible(v);
+    }
+};
 void macroCell::loadMacro(CCObject* button) {
 	if (!recorder.macro.empty()) {
 		geode::createQuickPopup(
@@ -735,24 +751,25 @@ void clearState(bool safeMode) {
 
 	playingAction = false;
 
-	if (isAndroid) {
+	if (isAndroid && PlayLayer::get()) {
 		if (disableFSBtn != nullptr) {
 			disableFSBtn->removeFromParent();
-			disableFSBtn = nullptr;
 		}
 		if (advanceFrameBtn != nullptr) {
 			advanceFrameBtn->removeFromParent();
-			advanceFrameBtn = nullptr;
 		}
 		if (speedhackBtn != nullptr) {
 			speedhackBtn->removeFromParent();
-			speedhackBtn = nullptr;
 		}
 		if (buttonsMenu != nullptr) {
 			buttonsMenu->removeFromParent();
-			buttonsMenu = nullptr;
 		}
 	}
+
+	disableFSBtn = nullptr;
+	advanceFrameBtn = nullptr;
+	speedhackBtn = nullptr;
+	buttonsMenu = nullptr;
 
 	releaseKeys();
 
@@ -1095,23 +1112,58 @@ class $modify(PauseLayer) {
 class $modify(PlayerObject) {
 void playerDestroyed(bool p0) {
 	if (isAndroid) androidAction = nullptr;
-	if (Mod::get()->getSettingValue<bool>("noclip"))
-		return;
-	if (Mod::get()->getSettingValue<bool>("instant_respawn"))
-		return PlayLayer::get()->resetLevel();
-	return PlayerObject::playerDestroyed(p0);
+	if ((!Mod::get()->getSettingValue<bool>("instant_respawn") || recorder.state == state::off)
+	|| (isAndroid && Mod::get()->getSettingValue<bool>("auto_safe_mode") && playedMacro))
+		return PlayerObject::playerDestroyed(p0);
+	return PlayLayer::get()->resetLevel();
 }
+};
+
+class $modify(CheckpointObject) {
+
+	bool init() {
+		auto playLayer = PlayLayer::get();
+		if (!playLayer || recorder.currentFrame() == 0) return CheckpointObject::init();
+		playerData p1;
+		playerData p2;
+		p1 = {
+			playLayer->m_player1->getPositionX(),
+			playLayer->m_player1->getPositionY(),
+			false,
+			playLayer->m_player1->m_rotationSpeed,
+			playLayer->m_player1->m_platformerXVelocity,
+			-80085
+		};
+		if (playLayer->m_player2 != nullptr) {
+			p2 = {
+				playLayer->m_player2->getPositionX(),
+				playLayer->m_player2->getPositionY(),
+				false,
+				playLayer->m_player2->m_rotationSpeed,
+				playLayer->m_player2->m_platformerXVelocity,
+				-80085
+			};
+		} else p2.xPos = 0;
+
+		checkpoints[this] = {
+			recorder.currentFrame(),
+			p1, p2
+		};
+		return CheckpointObject::init();
+		}
+	
 };
 
 class $modify(GJBaseGameLayer) {
 	void toggleFlipped(bool p0, bool p1) {
-		if (Mod::get()->getSettingValue<bool>("instant_mirror"))
-       		return GJBaseGameLayer::toggleFlipped(p0, true);
-		return GJBaseGameLayer::toggleFlipped(p0, p1);
+		if (!Mod::get()->getSettingValue<bool>("instant_mirror") || recorder.state == state::off)
+       		return GJBaseGameLayer::toggleFlipped(p0, p1);
+		return GJBaseGameLayer::toggleFlipped(p0, true);
     }
 	void handleButton(bool holding, int button, bool player1) {
 		if (!isAndroid) {
-if ((recorder.state == state::playing && playingAction) || recorder.state != state::playing) GJBaseGameLayer::handleButton(holding,button,player1);
+			if ((recorder.state == state::playing && (playingAction || !Mod::get()->getSettingValue<bool>("ignore_inputs"))) 
+			|| recorder.state != state::playing) GJBaseGameLayer::handleButton(holding,button,player1);
 }
 		if (isAndroid) {
 			if (recorder.state == state::recording) {
@@ -1141,9 +1193,13 @@ if ((recorder.state == state::playing && playingAction) || recorder.state != sta
 			int frame = recorder.currentFrame(); 
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else if (recorder.state == state::playing) {
+			if (!Mod::get()->getSettingValue<bool>("ignore_inputs"))
+				GJBaseGameLayer::handleButton(holding,button,player1);
+
 			if (androidAction != nullptr) {
 				if (androidAction->frame == recorder.currentFrame()) {
-					GJBaseGameLayer::handleButton(holding,button,player1);
+					if (Mod::get()->getSettingValue<bool>("ignore_inputs"))
+						GJBaseGameLayer::handleButton(holding,button,player1);
 			if (androidAction->p1.xPos != 0) {
 				if (!areEqual(this->m_player1->getPositionX(), androidAction->p1.xPos) ||
 				!areEqual(this->m_player1->getPositionY(), androidAction->p1.yPos))
@@ -1458,15 +1514,32 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 
 class $modify(PlayLayer) {
 
-	void loadFromCheckpoint(CheckpointObject* p) {
+	void destroyPlayer(PlayerObject* p1, GameObject* p2) {
+		if (!Mod::get()->getSettingValue<bool>("noclip") || recorder.state == state::off)
+			PlayLayer::destroyPlayer(p1,p2);
+	}
+
+	void loadFromCheckpoint(CheckpointObject* cp) {
 		if (recorder.state == state::recording) {
-			recorder.eraseActions(this);
+			recorder.eraseActions(this, cp);
 		}
-		PlayLayer::loadFromCheckpoint(p);
+		PlayLayer::loadFromCheckpoint(cp);
+		if (!checkpoints.contains(cp) || recorder.state != state::recording) return;
+		auto cpData =  checkpoints[cp];
+		this->m_player1->setPositionX(cpData.p1.xPos);
+		this->m_player1->setPositionY(cpData.p1.yPos);
+		this->m_player1->m_rotationSpeed = cpData.p1.rotation;
+		if (this->m_player2 != nullptr) {
+			this->m_player2->setPositionX(cpData.p2.xPos);
+			this->m_player2->setPositionY(cpData.p2.yPos);
+			this->m_player2->m_rotationSpeed = cpData.p2.rotation;
+		}
 	}
 
 	void delayedResetLevel() {
-		if (!Mod::get()->getSettingValue<bool>("instant_respawn") && !Mod::get()->getSettingValue<bool>("noclip"))
+		if (isAndroid && Mod::get()->getSettingValue<bool>("auto_safe_mode") && playedMacro) return;
+		if (!Mod::get()->getSettingValue<bool>("instant_respawn") || recorder.state == state::off
+		|| (isAndroid && Mod::get()->getSettingValue<bool>("auto_safe_mode") && playedMacro))
 			PlayLayer::delayedResetLevel();
 	}
 	void resetLevel() {
@@ -1511,8 +1584,13 @@ class $modify(PlayLayer) {
 	}
 
 	void levelComplete() {
-		PlayLayer::levelComplete();
 		if (stateLabel != nullptr) stateLabel->removeFromParent();
+		if (isAndroid && Mod::get()->getSettingValue<bool>("auto_safe_mode") && playedMacro) {
+			clearState(false);
+			this->onQuit();
+			return;
+		}
+		PlayLayer::levelComplete();
 		if (recorder.state != state::off)
 			shouldPlay2 = true;
 		
