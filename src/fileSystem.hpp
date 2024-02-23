@@ -14,6 +14,7 @@
 #define CCPOINT_CREATE(__X__,__Y__) cocos2d::CCPointMake((float)(__X__), (float)(__Y__))
 
 using namespace geode::prelude;
+
 class macroCell : public CCNode {
 public:
     static macroCell* create(std::string name) {
@@ -107,6 +108,7 @@ public:
         btn->setPosition({225,20});
         btn->setID(name);
         menu->addChild(btn);
+
         this->addChild(menu);
         return true;
     }
