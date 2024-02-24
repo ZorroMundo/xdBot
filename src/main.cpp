@@ -1118,8 +1118,9 @@ class $modify(PauseLayer) {
 class $modify(PlayerObject) {
 void playerDestroyed(bool p0) {
 	if (isAndroid) androidAction = nullptr;
-	if ((!Mod::get()->getSettingValue<bool>("instant_respawn") || recorder.state == state::off)
-	|| (isAndroid && Mod::get()->getSettingValue<bool>("auto_safe_mode") && playedMacro))
+	if  (isAndroid && Mod::get()->getSettingValue<bool>("auto_safe_mode") && playedMacro)
+		return PlayLayer::get()->resetLevel();
+	if ((!Mod::get()->getSettingValue<bool>("instant_respawn") || recorder.state == state::off))
 		return PlayerObject::playerDestroyed(p0);
 	return PlayLayer::get()->resetLevel();
 }
@@ -1127,9 +1128,11 @@ void playerDestroyed(bool p0) {
 
 class $modify(CheckpointObject) {
 
-	/*bool init() {
+	CheckpointObject* create() {
 		auto playLayer = PlayLayer::get();
-		if (!playLayer || recorder.currentFrame() == 0) return CheckpointObject::init();
+		int frame = recorder.currentFrame();
+		if (!playLayer || frame == 0) return CheckpointObject::create();
+		if (!playLayer->m_isPracticeMode) return CheckpointObject::create();
 		playerData p1;
 		playerData p2;
 		p1 = {
@@ -1152,11 +1155,11 @@ class $modify(CheckpointObject) {
 		} else p2.xPos = 0;
 
 		checkpoints[this] = {
-			recorder.currentFrame(),
+			frame,
 			p1, p2
 		};
-		return CheckpointObject::init();
-		}*/
+		return CheckpointObject::create();
+		}
 	
 };
 
