@@ -197,8 +197,14 @@ public:
 								}
 							} else break;
     					}
-					if (macro.back().holding ||
-					(macro[macro.size() - 2].holding && !macro[macro.size() - 2].player1)) {
+						bool fix = false;
+						if (macro.size() >= 2) {
+							if (macro.back().holding || (macro[macro.size() - 2].holding && !macro[macro.size() - 2].player1))
+								fix = true;
+						} else if (macro.back().holding)
+							fix = true;
+
+						if (fix) {
 						playerData p1;
 						playerData p2;
 						p1 = {
@@ -225,7 +231,7 @@ public:
 							macro.push_back({false, currentFrame(), 3, false, false, p1, p2});
 							macro.push_back({true, currentFrame(), 3, false, false, p1, p2});
 						}
-					}
+						}
 				}
 				} catch (const std::exception& e) {
 					log::debug("wtfffff? - {}",e);
@@ -720,14 +726,14 @@ void macroCell::handleLoad(CCObject* btn) {
     "OK"      
 	)->show();
 }
-class $modify(GameObject) {
+/*class $modify(GameObject) {
     void setVisible(bool v) {
 		if (!Mod::get()->getSettingValue<bool>("layout_mode") || recorder.state == state::off) return GameObject::setVisible(v);
 
         if (m_objectID != 44 && m_objectType == GameObjectType::Decoration) GameObject::setVisible(false);
         else GameObject::setVisible(v);
     }
-};
+};*/
 void macroCell::loadMacro(CCObject* button) {
 	if (!recorder.macro.empty()) {
 		geode::createQuickPopup(
