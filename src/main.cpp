@@ -1525,7 +1525,7 @@ class $modify(PlayLayer) {
 			PlayLayer::destroyPlayer(p1,p2);
 	}
 
-	void loadFromCheckpoint(CheckpointObject* cp) {
+	/*void loadFromCheckpoint(CheckpointObject* cp) {
 		if (recorder.state == state::recording) {
 			recorder.eraseActions(this, cp);
 		}
@@ -1540,7 +1540,7 @@ class $modify(PlayLayer) {
 			this->m_player2->setPositionY(cpData.p2.yPos);
 			this->m_player2->m_rotationSpeed = cpData.p2.rotation;
 		}
-	}
+	}*/
 
 	void delayedResetLevel() {
 		if (isAndroid && Mod::get()->getSettingValue<bool>("auto_safe_mode") && playedMacro) return;
