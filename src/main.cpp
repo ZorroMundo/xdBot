@@ -1127,7 +1127,7 @@ void playerDestroyed(bool p0) {
 
 class $modify(CheckpointObject) {
 
-	bool init() {
+	/*bool init() {
 		auto playLayer = PlayLayer::get();
 		if (!playLayer || recorder.currentFrame() == 0) return CheckpointObject::init();
 		playerData p1;
@@ -1156,7 +1156,7 @@ class $modify(CheckpointObject) {
 			p1, p2
 		};
 		return CheckpointObject::init();
-		}
+		}*/
 	
 };
 
