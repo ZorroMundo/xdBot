@@ -755,6 +755,7 @@ void clearState(bool safeMode) {
 	
 	recorder.state = state::off;
 
+	playedMacro = false;
 	playingAction = false;
 
 	if (isAndroid && PlayLayer::get()) {
@@ -799,7 +800,6 @@ void clearState(bool safeMode) {
 	Mod::get()->setSettingValue("frame_stepper", false);
 	if (!safeMode && !isAndroid && Mod::get()->getSettingValue<bool>("auto_safe_mode")) {
 		safeModeEnabled = false;
-		playedMacro = false;
 		safeMode::updateSafeMode();
 	}
 }
@@ -1128,11 +1128,12 @@ void playerDestroyed(bool p0) {
 
 class $modify(CheckpointObject) {
 
-	CheckpointObject* create() {
+	bool init() {
+		if (!CheckpointObject::init()) return false;
 		auto playLayer = PlayLayer::get();
 		int frame = recorder.currentFrame();
-		if (!playLayer || frame == 0) return CheckpointObject::create();
-		if (!playLayer->m_isPracticeMode) return CheckpointObject::create();
+		if (!playLayer || frame == 0) return true;
+		if (!playLayer->m_isPracticeMode) return true;
 		playerData p1;
 		playerData p2;
 		p1 = {
@@ -1158,7 +1159,7 @@ class $modify(CheckpointObject) {
 			frame,
 			p1, p2
 		};
-		return CheckpointObject::create();
+		return true;
 		}
 	
 };
@@ -1576,7 +1577,7 @@ class $modify(PlayLayer) {
 			safeMode::updateSafeMode();
 		}
 		
-		if (!Mod::get()->getSettingValue<bool>("auto_safe_mode")) playedMacro = false;
+		if (playedMacro) playedMacro = false;
 
 
 		if (recorder.state == state::playing) {
