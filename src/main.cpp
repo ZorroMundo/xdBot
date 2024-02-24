@@ -1523,6 +1523,12 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 
 class $modify(PlayLayer) {
 
+	bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
+		if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
+		clearState(false);
+		return true;
+	}
+
 	void destroyPlayer(PlayerObject* p1, GameObject* p2) {
 		if (!Mod::get()->getSettingValue<bool>("noclip") || recorder.state == state::off)
 			PlayLayer::destroyPlayer(p1,p2);
