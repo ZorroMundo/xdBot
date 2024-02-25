@@ -749,8 +749,6 @@ void clearState(bool safeMode) {
 	}
 	
 	recorder.state = state::off;
-
-	playedMacro = false;
 	playingAction = false;
 
 	if (isAndroid && PlayLayer::get()) {
@@ -793,9 +791,12 @@ void clearState(bool safeMode) {
 	}
 	
 	mod->setSettingValue("frame_stepper", false);
-	if (!safeMode && !isAndroid && mod->getSettingValue<bool>("auto_safe_mode")) {
-		safeModeEnabled = false;
-		safeMode::updateSafeMode();
+	if (!safeMode) {
+		playedMacro = false;
+		if (!isAndroid && mod->getSettingValue<bool>("auto_safe_mode")) {
+			safeModeEnabled = false;
+			safeMode::updateSafeMode();
+		}
 	}
 }
 
