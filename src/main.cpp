@@ -686,7 +686,7 @@ void macroCell::handleLoad(CCObject* btn) {
 					(double)p2xSpeed,
 					(double)p2ySpeed,
 				};
-				if ((isAndroid && !(bool)posOnly) || !isAndroid)
+				//if ((isAndroid && !(bool)posOnly) || !isAndroid)
 					recorder.macro.push_back({(bool)player1, (int)frame, (int)button, (bool)holding, (bool)posOnly, p1, p2});
 			}
 		} else if (count < 1) {
@@ -1513,7 +1513,6 @@ class $modify(PlayLayer) {
 			PlayLayer::delayedResetLevel();
 	}
 	void resetLevel() {
-		PlayLayer::resetLevel();
 		if (recorder.state != state::off && restart != false) {
 			restart = false;
 		}
@@ -1543,7 +1542,9 @@ class $modify(PlayLayer) {
         	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
         	channel->setPitch(1);
 			}
+		PlayLayer::resetLevel();
 		} else if (recorder.state != state::off) {
+		PlayLayer::resetLevel();
 			if (recorder.currentFrame() == 0) {
 				if (!recorder.macro.empty())
 						recorder.macro.clear();
