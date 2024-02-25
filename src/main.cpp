@@ -930,32 +930,7 @@ void checkUI() {
 				buttonsMenu->removeFromParent();
 				buttonsMenu = nullptr;
 			}
-		}
-		if (recorder.state == state::playing) {
-			if (stateLabel != nullptr) {
-				if (stateLabel->getString() != "Playing" && mod->getSettingValue<bool>("show_playing_label"))
-					stateLabel->setString("Playing");
-				else if (!mod->getSettingValue<bool>("show_playing_label")) {
-					stateLabel->removeFromParent();
-					stateLabel = nullptr;
-				}
-			} else if (mod->getSettingValue<bool>("show_playing_label")) {
-				addLabel("Playing");
-			}
-		}
-		if (recorder.state == state::recording) {
-			if (stateLabel != nullptr) {
-				if (stateLabel->getString() != "Recording" && mod->getSettingValue<bool>("show_recording_label"))
-					stateLabel->setString("Recording");
-				else if (!mod->getSettingValue<bool>("show_recording_label")) {
-					stateLabel->removeFromParent();
-					stateLabel = nullptr;
-				}
-			} else if (mod->getSettingValue<bool>("show_recording_label")) {
-				addLabel("Recording");
-			}
-		}
-	if (isAndroid) {
+		} else if (recorder.state == state::recording) {
 			if (buttonsMenu != nullptr) {
 			if (advanceFrameBtn != nullptr) {
 				if (mod->getSettingValue<bool>("disable_frame_stepper")) {
@@ -1000,7 +975,32 @@ void checkUI() {
 				addButton("speedhack_btn");
 			}
 			}
+		}
+
+		if (recorder.state == state::playing) {
+			if (stateLabel != nullptr) {
+				if (stateLabel->getString() != "Playing" && mod->getSettingValue<bool>("show_playing_label"))
+					stateLabel->setString("Playing");
+				else if (!mod->getSettingValue<bool>("show_playing_label")) {
+					stateLabel->removeFromParent();
+					stateLabel = nullptr;
+				}
+			} else if (mod->getSettingValue<bool>("show_playing_label")) {
+				addLabel("Playing");
 			}
+		}
+		if (recorder.state == state::recording) {
+			if (stateLabel != nullptr) {
+				if (stateLabel->getString() != "Recording" && mod->getSettingValue<bool>("show_recording_label"))
+					stateLabel->setString("Recording");
+				else if (!mod->getSettingValue<bool>("show_recording_label")) {
+					stateLabel->removeFromParent();
+					stateLabel = nullptr;
+				}
+			} else if (mod->getSettingValue<bool>("show_recording_label")) {
+				addLabel("Recording");
+			}
+		}
 }
 void onReset() {
 	if (recorder.state != state::off && restart != false) {
@@ -1454,6 +1454,7 @@ class $modify(PlayLayer) {
 
 
 		if (recorder.state == state::playing) {
+			releaseKeys();
 			playingAction = false;
 			recorder.currentAction = 0;
 			if (mod->getSettingValue<bool>("speedhack_audio")) {
