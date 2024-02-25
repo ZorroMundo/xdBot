@@ -1026,9 +1026,9 @@ void onReset() {
 			releaseKeys();
 			recorder.currentAction = 0;
 			if (mod->getSettingValue<bool>("speedhack_audio")) {
-			FMOD::ChannelGroup* channel;
-        	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
-        	channel->setPitch(1);
+				FMOD::ChannelGroup* channel;
+        		FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
+        		channel->setPitch(1);
 			}
 		}
 }
@@ -1040,12 +1040,12 @@ void playerDestroyed(bool p0) {
 	if  (isAndroid && mod->getSettingValue<bool>("auto_safe_mode") && playedMacro) {
 		noDelayedReset = true;
 		onReset();
-		return PlayLayer::get()->resetLevel();
+		return PlayLayer::get()->fullReset();
 	}
 	if ((!mod->getSettingValue<bool>("instant_respawn") || recorder.state == state::off))
 		return PlayerObject::playerDestroyed(p0);
 	onReset();
-	return PlayLayer::get()->resetLevel();
+	return PlayLayer::get()->fullReset();
 }
 void playDeathEffect() {
 	if (!mod->getSettingValue<bool>("disable_death_effect") || recorder.state == state::off)
@@ -1421,6 +1421,7 @@ class $modify(PlayLayer) {
 	}
 
 	void delayedResetLevel() {
+		log::debug("delayi");
 		if (noDelayedReset) {
 			noDelayedReset = false;
 			return;	
