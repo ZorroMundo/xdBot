@@ -1357,7 +1357,7 @@ if (recorder.state == state::playing && isAndroid) {
         	}
 			if (recorder.currentAction >= recorder.macro.size()) {
 				if (stateLabel!=nullptr) stateLabel->removeFromParent();
-				clearState(false);
+				clearState(true);
 			}
 		}
 
