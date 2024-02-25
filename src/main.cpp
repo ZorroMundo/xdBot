@@ -41,9 +41,9 @@ bool holdV = false;
 bool playedMacro = false;
 bool noDelayedReset = false;
 
-const int playerEnums[2][5] = {
-    {cocos2d::enumKeyCodes::KEY_ArrowUp, cocos2d::enumKeyCodes::KEY_ArrowLeft, cocos2d::enumKeyCodes::KEY_ArrowRight, cocos2d::enumKeyCodes::KEY_ArrowUp, cocos2d::enumKeyCodes::KEY_ArrowUp}, 
-    {cocos2d::enumKeyCodes::KEY_W, cocos2d::enumKeyCodes::KEY_A, cocos2d::enumKeyCodes::KEY_D, cocos2d::enumKeyCodes::KEY_W, cocos2d::enumKeyCodes::KEY_W}
+const int playerEnums[2][3] = {
+    {cocos2d::enumKeyCodes::KEY_ArrowUp, cocos2d::enumKeyCodes::KEY_ArrowLeft, cocos2d::enumKeyCodes::KEY_ArrowRight}, 
+    {cocos2d::enumKeyCodes::KEY_W, cocos2d::enumKeyCodes::KEY_A, cocos2d::enumKeyCodes::KEY_D}
 };
 
 const int fpsArr[4] = {60,120,180,240};
@@ -1350,10 +1350,17 @@ if (recorder.state == state::playing && isAndroid) {
 					playedMacro = true;
 					int pBtn = (currentActionIndex.button < 6 && currentActionIndex.button > 0) ? currentActionIndex.button : 1;
 
-					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
-					static_cast<cocos2d::enumKeyCodes>(playerEnums[player]
-					[pBtn-1]),
-					currentActionIndex.holding, false);
+					if (this->m_levelSettings->m_platformerMode)
+						this->handleButton(
+    					currentActionIndex.holding,
+    					pBtn,
+    					currentActionIndex.player1
+						);
+					else
+						cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
+						static_cast<cocos2d::enumKeyCodes>(playerEnums[player]
+						[pBtn-1]),
+						currentActionIndex.holding, false);
 
 				}
             	recorder.currentAction++;
