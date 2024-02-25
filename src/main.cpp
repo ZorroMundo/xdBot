@@ -39,6 +39,7 @@ bool shouldPlay = false;
 bool shouldPlay2 = false;
 bool holdV = false;
 bool playedMacro = false;
+bool noDelayedReset = false;
 
 const int playerEnums[2][3] = {
     {cocos2d::enumKeyCodes::KEY_ArrowUp, cocos2d::enumKeyCodes::KEY_ArrowLeft, cocos2d::enumKeyCodes::KEY_ArrowRight}, 
@@ -816,7 +817,7 @@ public:
 				CCMenuItemSpriteExtra* btn = nullptr;
 				spr = CCSprite::createWithSpriteFrameName("GJ_deleteSongBtn_001.png");
 				spr->setOpacity(102);
-        		spr->setScale(0.65f);
+        		spr->setScale(0.8f);
 				btn = CCMenuItemSpriteExtra::create(
         		spr,
         		PlayLayer::get(),
@@ -867,7 +868,7 @@ void addButton(const char* id) {
 		
 	if (id == "advance_frame_btn") {
 		spr = CCSprite::createWithSpriteFrameName("GJ_plainBtn_001.png");
-        spr->setScale(0.65f);
+        spr->setScale(0.8f);
 		spr->setOpacity(102);
         auto icon = CCSprite::createWithSpriteFrameName("GJ_arrow_02_001.png");
         icon->setPosition(spr->getContentSize() / 2 + ccp(2.5f,0));
@@ -880,14 +881,14 @@ void addButton(const char* id) {
         	PlayLayer::get(),
 			menu_selector(mobileButtons::frameAdvance)
     	);
-		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(15, y));
+		btn->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(20, y));
 		btn->setID(id);
 		btn->setZOrder(100);
 		buttonsMenu->addChild(btn);
 		advanceFrameBtn = btn;
 	} else if (id == "speedhack_btn") {
 		spr = CCSprite::createWithSpriteFrameName("GJ_plainBtn_001.png");
-        spr->setScale(0.65f);
+        spr->setScale(0.8f);
 		spr->setOpacity(102);
         auto icon = CCSprite::createWithSpriteFrameName("GJ_timeIcon_001.png");
         icon->setPosition(spr->getContentSize() / 2);
@@ -898,7 +899,7 @@ void addButton(const char* id) {
         	PlayLayer::get(),
 			menu_selector(mobileButtons::toggleSpeedhack)
     	);
-		btn->setPosition(winSize/2 + ccp(winSize.width/2, -winSize.height/2) + ccp(-15, 35));
+		btn->setPosition(winSize/2 + ccp(winSize.width/2, -winSize.height/2) + ccp(-20, 35));
 		btn->setID(id);
 		btn->setZOrder(100);
 		buttonsMenu->addChild(btn);
@@ -906,7 +907,7 @@ void addButton(const char* id) {
 	} else if (id == "disable_fs_btn") {
 		spr = CCSprite::createWithSpriteFrameName("GJ_deleteSongBtn_001.png");
 		spr->setOpacity(102);
-        spr->setScale(0.65f);
+        spr->setScale(0.8f);
 		btn = CCMenuItemSpriteExtra::create(
         	spr,
         	PlayLayer::get(),
@@ -1114,8 +1115,10 @@ class $modify(PauseLayer) {
 class $modify(PlayerObject) {
 void playerDestroyed(bool p0) {
 	if (isAndroid) androidAction = nullptr;
-	if  (isAndroid && mod->getSettingValue<bool>("auto_safe_mode") && playedMacro)
+	if  (isAndroid && mod->getSettingValue<bool>("auto_safe_mode") && playedMacro) {
+		noDelayedReset = true;
 		return PlayLayer::get()->resetLevel();
+	}
 	if ((!mod->getSettingValue<bool>("instant_respawn") || recorder.state == state::off))
 		return PlayerObject::playerDestroyed(p0);
 	return PlayLayer::get()->resetLevel();
@@ -1514,9 +1517,11 @@ class $modify(PlayLayer) {
 	}
 
 	void delayedResetLevel() {
-		if (isAndroid && mod->getSettingValue<bool>("auto_safe_mode") && playedMacro) return;
-		if (!mod->getSettingValue<bool>("instant_respawn") || recorder.state == state::off
-		|| (isAndroid && mod->getSettingValue<bool>("auto_safe_mode") && playedMacro))
+		if (noDelayedReset) {
+			noDelayedReset = false;
+			return;	
+		} 
+		if (!mod->getSettingValue<bool>("instant_respawn") || recorder.state == state::off)
 			PlayLayer::delayedResetLevel();
 	}
 	void resetLevel() {
