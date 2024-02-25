@@ -1088,6 +1088,7 @@ class $modify(PauseLayer) {
 
 	void onResume(CCObject* sender) {
 		PauseLayer::onResume(sender);
+		checkUI();
 		if (restart) PlayLayer::get()->resetLevel();
 		if (recorder.state == state::off) {
 			if (mod->getSettingValue<bool>("speedhack_audio")) {
@@ -1095,8 +1096,6 @@ class $modify(PauseLayer) {
         	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
 			channel->setPitch(1);
 			}
-		} else {
-			checkUI();
 		}
 	}
 
