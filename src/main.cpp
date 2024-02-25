@@ -1007,11 +1007,9 @@ void onReset() {
 			restart = false;
 		}
 		
-		if (recorder.state != state::off) {
-			checkUI();
-			playerHolding = false;
-			if (!isAndroid) leftOver = 0.f;
-		}
+		checkUI();
+		playerHolding = false;
+		leftOver = 0.f;
 
 		if (isAndroid) androidAction = nullptr;
 
