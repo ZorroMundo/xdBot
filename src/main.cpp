@@ -172,11 +172,9 @@ public:
 			bool plat = bgl->m_levelSettings->m_platformerMode;
 			realp1 = (GameManager::get()->getGameVariable("0010") && (!plat || button == 1)) ? !player1 : player1;
 			if (macro.size() >= 2 && plat) {
-				if (button == 1) {
 					if (macro.back().holding == macro[macro.size()-2].holding &&
 					 macro.back().frame == macro[macro.size()-2].frame && macro[macro.size()-2].button != 1)
 						macro.pop_back();
-				}
 			}
 		}
 		else realp1 = player1;
