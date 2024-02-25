@@ -47,9 +47,9 @@
 			"type": "bool",
 			"default": false
 		},
-		"layout_mode": {
-			"name": "Layout Mode",
-			"description": "Hides decoration objects.",
+		"disable_death_effect": {
+			"name": "Disable Death Effect",
+			"description": "Disables the death effect.",
 			"type": "bool",
 			"default": false
 		},
@@ -63,10 +63,7 @@
 			"name": "Auto Safe Mode",
 			"description": "Disables level progress when playing a macro to prevent accidental hacking.\nAdds a water mark at the end if disabled.",
 			"type": "bool",
-			"default": {
-				"win": true,
-				"android": true
-			}
+			"default": true
 		},
 		"auto_enable_play": {
 			"name": "Auto Play",
