@@ -168,8 +168,16 @@ public:
 	}
 	void recordAction(bool holding, int button, bool player1, int frame, GJBaseGameLayer* bgl, playerData p1Data, playerData p2Data) {
 		bool realp1;
-		if (isAndroid) 
-			realp1 = (GameManager::get()->getGameVariable("0010") && !bgl->m_levelSettings->m_platformerMode) ? !player1 : player1;
+		if (isAndroid) {
+			bool plat = bgl->m_levelSettings->m_platformerMode;
+			realp1 = (GameManager::get()->getGameVariable("0010") && !plat) ? !player1 : player1;
+			if (macro.size() >= 3 && plat) {
+				if (button == 1) {
+					if (macro.back().button == 1 && macro.back().holding == macro[macro.size()-2].holding && macro[macro.size()-2].button != 1)
+						macro.pop_back();
+				}
+			}
+		}
 		else realp1 = player1;
 		
     	macro.push_back({realp1, frame, button, holding, false, p1Data, p2Data});
