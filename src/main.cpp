@@ -250,7 +250,7 @@ class RecordLayer : public geode::Popup<std::string const&> {
 protected:
     bool setup(std::string const& value) override {
         auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
-		auto versionLabel = CCLabelBMFont::create("xdBot v1.4.8 - made by Zilko", "chatFont.fnt");
+		auto versionLabel = CCLabelBMFont::create("xdBot v1.5.0 - made by Zilko", "chatFont.fnt");
 		versionLabel->setOpacity(60);
 		versionLabel->setAnchorPoint(ccp(0.0f,0.5f));
 		versionLabel->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(3, 6));
@@ -1175,7 +1175,7 @@ class $modify(GJBaseGameLayer) {
 				p2.xPos = 0;
 			}
 			int frame = recorder.currentFrame();
-			recorder.recordAction(holding, ((button > 3) ? 1: button), player1, frame, this, p1, p2);
+			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else if (recorder.state == state::playing) {
 			if (!mod->getSettingValue<bool>("ignore_inputs"))
 				GJBaseGameLayer::handleButton(holding,button,player1);
@@ -1196,7 +1196,6 @@ class $modify(GJBaseGameLayer) {
 
 				}
 			}
-			androidAction = nullptr;
 			}
 		}
 		} else GJBaseGameLayer::handleButton(holding,button,player1);
@@ -1365,6 +1364,7 @@ if (recorder.state == state::playing && isAndroid) {
 				}
             	recorder.currentAction++;
         	}
+			androidAction = nullptr;
 			if (recorder.currentAction >= recorder.macro.size()) {
 				if (stateLabel!=nullptr) stateLabel->removeFromParent();
 				clearState(true);
@@ -1418,7 +1418,7 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 					safeModeEnabled = true;
 					safeMode::updateSafeMode();
 				}
-				playedMacro = true;
+				if (!playedMacro) playedMacro = true;
 				if (!mod->getSettingValue<bool>("override_macro_mode") && currentActionIndex.p1.xPos != 0) {
 						if (!areEqual(self->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
 						!areEqual(self->m_player1->getPositionY(), currentActionIndex.p1.yPos))
@@ -1496,28 +1496,9 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 		}
 }
 
-class $modify(GameObject) {
-    void setVisible(bool visible) {
-		if (!mod->getSettingValue<bool>("layout_mode")) return GameObject::setVisible(visible);
-        if (m_objectID != 44 && m_objectType == GameObjectType::Decoration)
-			GameObject::setVisible(false);
-		else {
-			m_activeMainColorID = -1;
-			m_activeDetailColorID = -1;
-			m_isHide = false;
-			GameObject::setVisible(true);
-		}
-    }
-};
 
 class $modify(PlayLayer) {
-	void addObject(GameObject* obj) {
-		if (!mod->getSettingValue<bool>("layout_mode")) return PlayLayer::addObject(obj);
-		const std::unordered_set<int> excludedIDs = 
-		{22, 24, 27, 28, 29, 30, 56, 58, 59, 105, 899, 915, 1007, 1006, 2903, 2904, 2905, 2907, 2909, 2910, 2911, 2912, 2913, 2914, 2915, 2916, 2917, 2919, 2920, 2921, 2922, 2923, 2924};
-		if (!excludedIDs.contains(obj->m_objectID))
-			PlayLayer::addObject(obj);
-	}
+	
 	void destroyPlayer(PlayerObject* p1, GameObject* p2) {
 		if (!mod->getSettingValue<bool>("noclip") || recorder.state == state::off)
 			PlayLayer::destroyPlayer(p1,p2);
@@ -1540,7 +1521,7 @@ class $modify(PlayLayer) {
 		if (recorder.state != state::off) {
 			checkUI();
 			playerHolding = false;
-			leftOver = 0.f;
+			if (!isAndroid) leftOver = 0.f;
 		}
 
 		if (isAndroid) androidAction = nullptr;
@@ -1555,6 +1536,7 @@ class $modify(PlayLayer) {
 
 		if (recorder.state == state::playing) {
 			playingAction = false;
+			releaseKeys();
 			recorder.currentAction = 0;
 			if (mod->getSettingValue<bool>("speedhack_audio")) {
 			FMOD::ChannelGroup* channel;
