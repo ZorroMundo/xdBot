@@ -168,13 +168,6 @@ public:
         std::string noBUMessage;
         CCPoint corner = winSize/2.f-CCPOINT_CREATE(m_size.width/2.f,m_size.height/2.f);
         macros = file::readDirectory(Mod::get()->getSaveDir());
-
-        auto emptyBtn = CCSprite::createWithSpriteFrameName("GJ_plainBtn_001.png");
-        emptyBtn->setScale(0.75f);
-        auto folderIcon = CCSprite::createWithSpriteFrameName("folderIcon_001.png");
-        folderIcon->setPosition(emptyBtn->getContentSize() / 2);
-        folderIcon->setScale(0.8f);
-        emptyBtn->addChild(folderIcon);
         auto menu = CCMenu::create();
         menu->setPosition({0,0});
         CCSprite* tSprite = nullptr;
@@ -202,8 +195,14 @@ public:
         );
         button->setPosition(corner + CCPOINT_CREATE(380,y));
         menu->addChild(button);
-
         m_mainLayer->addChild(menu);
+        
+        auto emptyBtn = CCSprite::createWithSpriteFrameName("GJ_plainBtn_001.png");
+        emptyBtn->setScale(0.75f);
+        auto folderIcon = CCSprite::createWithSpriteFrameName("folderIcon_001.png");
+        folderIcon->setPosition(emptyBtn->getContentSize() / 2);
+        folderIcon->setScale(0.8f);
+        emptyBtn->addChild(folderIcon);
         auto openFolderBtn = CCMenuItemSpriteExtra::create(
             emptyBtn,
             this,
