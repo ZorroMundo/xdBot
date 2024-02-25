@@ -1167,8 +1167,8 @@ class $modify(GJBaseGameLayer) {
 			} else {
 				p2.xPos = 0;
 			}
-			int frame = recorder.currentFrame(); 
-			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
+			int frame = recorder.currentFrame();
+			recorder.recordAction(holding, ((button > 3) ? 1: button), player1, frame, this, p1, p2);
 		} else if (recorder.state == state::playing) {
 			if (!mod->getSettingValue<bool>("ignore_inputs"))
 				GJBaseGameLayer::handleButton(holding,button,player1);
@@ -1350,17 +1350,10 @@ if (recorder.state == state::playing && isAndroid) {
 					playedMacro = true;
 					int pBtn = (currentActionIndex.button < 4 && currentActionIndex.button > 0) ? currentActionIndex.button : 1;
 
-					if (this->m_levelSettings->m_platformerMode)
-						this->handleButton(
-    					currentActionIndex.holding,
-    					pBtn,
-    					currentActionIndex.player1
-						);
-					else
-						cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
-						static_cast<cocos2d::enumKeyCodes>(playerEnums[player]
-						[pBtn-1]),
-						currentActionIndex.holding, false);
+					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
+					static_cast<cocos2d::enumKeyCodes>(playerEnums[player]
+					[pBtn-1]),
+					currentActionIndex.holding, false);
 
 				}
             	recorder.currentAction++;
