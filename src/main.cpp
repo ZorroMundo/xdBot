@@ -1348,7 +1348,7 @@ if (recorder.state == state::playing && isAndroid) {
 					: 0;
 
 					playedMacro = true;
-					int pBtn = (currentActionIndex.button < 4 && currentActionIndex.button > 0) ? currentActionIndex.button : 1;
+					int pBtn = (currentActionIndex.button < 6 && currentActionIndex.button > 0) ? currentActionIndex.button : 1;
 
 					cocos2d::CCKeyboardDispatcher::get()->dispatchKeyboardMSG(
 					static_cast<cocos2d::enumKeyCodes>(playerEnums[player]
@@ -1460,7 +1460,7 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 
 					self->handleButton(
     				currentActionIndex.holding,
-    				((currentActionIndex.button < 4 && currentActionIndex.button > 0) ? currentActionIndex.button : 1),
+    				((currentActionIndex.button < 6 && currentActionIndex.button > 0) ? currentActionIndex.button : 1),
     				currentActionIndex.player1
 					);
 
