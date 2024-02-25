@@ -41,9 +41,9 @@ bool holdV = false;
 bool playedMacro = false;
 bool noDelayedReset = false;
 
-const int playerEnums[2][3] = {
-    {cocos2d::enumKeyCodes::KEY_ArrowUp, cocos2d::enumKeyCodes::KEY_ArrowLeft, cocos2d::enumKeyCodes::KEY_ArrowRight}, 
-    {cocos2d::enumKeyCodes::KEY_W, cocos2d::enumKeyCodes::KEY_A, cocos2d::enumKeyCodes::KEY_D}
+const int playerEnums[2][5] = {
+    {cocos2d::enumKeyCodes::KEY_ArrowUp, cocos2d::enumKeyCodes::KEY_ArrowLeft, cocos2d::enumKeyCodes::KEY_ArrowRight, cocos2d::enumKeyCodes::KEY_ArrowUp, cocos2d::enumKeyCodes::KEY_ArrowUp}, 
+    {cocos2d::enumKeyCodes::KEY_W, cocos2d::enumKeyCodes::KEY_A, cocos2d::enumKeyCodes::KEY_D, cocos2d::enumKeyCodes::KEY_W, cocos2d::enumKeyCodes::KEY_W}
 };
 
 const int fpsArr[4] = {60,120,180,240};
