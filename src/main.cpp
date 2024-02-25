@@ -1502,13 +1502,13 @@ class $modify(PlayLayer) {
 							-80085,
 							-80085
 						};
-						recorder.macro.push_back({false, currentFrame(), 1, false, false, p1, p2});
-						recorder.macro.push_back({true, currentFrame(), 1, false, false, p1, p2});
-						if (pl->m_levelSettings->m_platformerMode) {
-							recorder.macro.push_back({false, currentFrame(), 2, false, false, p1, p2});
-							recorder.macro.push_back({true, currentFrame(), 2, false, false, p1, p2});
-							recorder.macro.push_back({false, currentFrame(), 3, false, false, p1, p2});
-							recorder.macro.push_back({true, currentFrame(), 3, false, false, p1, p2});
+						recorder.macro.push_back({false, frame, 1, false, false, p1, p2});
+						recorder.macro.push_back({true, frame, 1, false, false, p1, p2});
+						if (this->m_levelSettings->m_platformerMode) {
+							recorder.macro.push_back({false, frame, 2, false, false, p1, p2});
+							recorder.macro.push_back({true, frame, 2, false, false, p1, p2});
+							recorder.macro.push_back({false, frame, 3, false, false, p1, p2});
+							recorder.macro.push_back({true, frame, 3, false, false, p1, p2});
 						}
 					}
 				}
