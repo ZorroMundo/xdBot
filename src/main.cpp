@@ -1477,10 +1477,10 @@ class $modify(PlayLayer) {
 							} else break;
     					}
 						bool fix = false;
-					if (macro.size() >= 2) {
-							if (macro.back().holding || (macro[macro.size() - 2].holding && !macro[macro.size() - 2].player1))
+					if (recorder.macro.size() >= 2) {
+							if (recorder.macro.back().holding || (recorder.macro[recorder.macro.size() - 2].holding && !recorder.macro[recorder.macro.size() - 2].player1))
 								fix = true;
-						} else if (macro.back().holding)
+						} else if (recorder.macro.back().holding)
 							fix = true;
 
 						if (fix) {
@@ -1502,13 +1502,13 @@ class $modify(PlayLayer) {
 							-80085,
 							-80085
 						};
-						macro.push_back({false, currentFrame(), 1, false, false, p1, p2});
-						macro.push_back({true, currentFrame(), 1, false, false, p1, p2});
+						recorder.macro.push_back({false, currentFrame(), 1, false, false, p1, p2});
+						recorder.macro.push_back({true, currentFrame(), 1, false, false, p1, p2});
 						if (pl->m_levelSettings->m_platformerMode) {
-							macro.push_back({false, currentFrame(), 2, false, false, p1, p2});
-							macro.push_back({true, currentFrame(), 2, false, false, p1, p2});
-							macro.push_back({false, currentFrame(), 3, false, false, p1, p2});
-							macro.push_back({true, currentFrame(), 3, false, false, p1, p2});
+							recorder.macro.push_back({false, currentFrame(), 2, false, false, p1, p2});
+							recorder.macro.push_back({true, currentFrame(), 2, false, false, p1, p2});
+							recorder.macro.push_back({false, currentFrame(), 3, false, false, p1, p2});
+							recorder.macro.push_back({true, currentFrame(), 3, false, false, p1, p2});
 						}
 					}
 				}
