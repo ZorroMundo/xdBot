@@ -1118,16 +1118,49 @@ class $modify(PauseLayer) {
 	}
 
 };
+void onReset() {
+	if (recorder.state != state::off && restart != false) {
+			restart = false;
+		}
+		
+		if (recorder.state != state::off) {
+			checkUI();
+			playerHolding = false;
+			if (!isAndroid) leftOver = 0.f;
+		}
 
+		if (isAndroid) androidAction = nullptr;
+
+		if (safeModeEnabled && !isAndroid && mod->getSettingValue<bool>("auto_safe_mode")) {
+			safeModeEnabled = false;
+			safeMode::updateSafeMode();
+		}
+		
+		if (playedMacro) playedMacro = false;
+
+
+		if (recorder.state == state::playing) {
+			playingAction = false;
+			releaseKeys();
+			recorder.currentAction = 0;
+			if (mod->getSettingValue<bool>("speedhack_audio")) {
+			FMOD::ChannelGroup* channel;
+        	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
+        	channel->setPitch(1);
+			}
+		}
+}
 class $modify(PlayerObject) {
 void playerDestroyed(bool p0) {
 	if (isAndroid) androidAction = nullptr;
 	if  (isAndroid && mod->getSettingValue<bool>("auto_safe_mode") && playedMacro) {
 		noDelayedReset = true;
+		onReset();
 		return PlayLayer::get()->resetLevel();
 	}
 	if ((!mod->getSettingValue<bool>("instant_respawn") || recorder.state == state::off))
 		return PlayerObject::playerDestroyed(p0);
+	onReset();
 	return PlayLayer::get()->resetLevel();
 }
 void playDeathEffect() {
@@ -1181,7 +1214,6 @@ class $modify(GJBaseGameLayer) {
 				GJBaseGameLayer::handleButton(holding,button,player1);
 
 			if (androidAction != nullptr) {
-				if (androidAction->frame == recorder.currentFrame()) {
 					if (mod->getSettingValue<bool>("ignore_inputs"))
 						GJBaseGameLayer::handleButton(holding,button,player1);
 			if (androidAction->p1.xPos != 0) {
@@ -1196,8 +1228,8 @@ class $modify(GJBaseGameLayer) {
 
 				}
 			}
-			}
 		}
+		androidAction = nullptr;
 		} else GJBaseGameLayer::handleButton(holding,button,player1);
 
 	} else if (recorder.state == state::recording) {
@@ -1622,7 +1654,6 @@ class $modify(EndLevelLayer) {
 		clearState(false);
 	}
 };
-int syncCooldown = 0;
 int holdCooldown = 0;
 class $modify(CCScheduler) {
 	void update(float dt) {
@@ -1666,12 +1697,6 @@ class $modify(CCScheduler) {
         	}
     	}
     leftOver += (dt - dt2 * mult); 
-	if (recorder.state == state::playing && !PlayLayer::get()->m_levelSettings->m_platformerMode) {
-		syncCooldown++;
-		if (syncCooldown >= 20 && leftOver > 1) {
-			syncCooldown = 0;
-		}
-	}
 	}
 };
 
