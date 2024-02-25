@@ -1180,6 +1180,7 @@ class $modify(GJBaseGameLayer) {
 			if (!mod->getSettingValue<bool>("ignore_inputs"))
 				GJBaseGameLayer::handleButton(holding,button,player1);
 
+			if (androidAction != nullptr) {
 				if (androidAction->frame == recorder.currentFrame()) {
 					if (mod->getSettingValue<bool>("ignore_inputs"))
 						GJBaseGameLayer::handleButton(holding,button,player1);
@@ -1196,6 +1197,7 @@ class $modify(GJBaseGameLayer) {
 				}
 			}
 			}
+		}
 		} else GJBaseGameLayer::handleButton(holding,button,player1);
 
 	} else if (recorder.state == state::recording) {
@@ -1362,7 +1364,6 @@ if (recorder.state == state::playing && isAndroid) {
 				}
             	recorder.currentAction++;
         	}
-			androidAction = nullptr;
 			if (recorder.currentAction >= recorder.macro.size()) {
 				if (stateLabel!=nullptr) stateLabel->removeFromParent();
 				clearState(true);
