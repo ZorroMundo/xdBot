@@ -1002,6 +1002,38 @@ void checkUI() {
 			}
 			}
 }
+void onReset() {
+	if (recorder.state != state::off && restart != false) {
+			restart = false;
+		}
+		
+		if (recorder.state != state::off) {
+			checkUI();
+			playerHolding = false;
+			if (!isAndroid) leftOver = 0.f;
+		}
+
+		if (isAndroid) androidAction = nullptr;
+
+		if (safeModeEnabled && !isAndroid && mod->getSettingValue<bool>("auto_safe_mode")) {
+			safeModeEnabled = false;
+			safeMode::updateSafeMode();
+		}
+		
+		if (playedMacro) playedMacro = false;
+
+
+		if (recorder.state == state::playing) {
+			playingAction = false;
+			releaseKeys();
+			recorder.currentAction = 0;
+			if (mod->getSettingValue<bool>("speedhack_audio")) {
+			FMOD::ChannelGroup* channel;
+        	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
+        	channel->setPitch(1);
+			}
+		}
+}
 	// ---------------- Hooks ---------------- 539//
 
 class $modify(PlayerObject) {
