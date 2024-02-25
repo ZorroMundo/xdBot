@@ -1180,7 +1180,6 @@ class $modify(GJBaseGameLayer) {
 			if (!mod->getSettingValue<bool>("ignore_inputs"))
 				GJBaseGameLayer::handleButton(holding,button,player1);
 
-			if (androidAction != nullptr) {
 				if (androidAction->frame == recorder.currentFrame()) {
 					if (mod->getSettingValue<bool>("ignore_inputs"))
 						GJBaseGameLayer::handleButton(holding,button,player1);
@@ -1197,7 +1196,6 @@ class $modify(GJBaseGameLayer) {
 				}
 			}
 			}
-		}
 		} else GJBaseGameLayer::handleButton(holding,button,player1);
 
 	} else if (recorder.state == state::recording) {
