@@ -1156,6 +1156,7 @@ class $modify(GJBaseGameLayer) {
 		return static_cast<int>(player1);
 	}
 	void postUpdate(float dt) {
+		PlayLayer::postUpdate(dt);
 if (isAndroid) {
     if (recorder.state == state::recording) {
             if (((playerHolding && !mod->getSettingValue<bool>("vanilla")) ||
