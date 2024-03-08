@@ -1157,125 +1157,125 @@ class $modify(GJBaseGameLayer) {
 	}
 	void postUpdate(float dt) {
 if (isAndroid) {
-if (recorder.state == state::recording) {
-		if (((playerHolding && !mod->getSettingValue<bool>("vanilla")) ||
-		mod->getSettingValue<bool>("frame_fix")) && !recorder.macro.empty()) {
-			
-			if (!(recorder.macro.back().frame == recorder.currentFrame() &&
-			(recorder.macro.back().posOnly || recorder.macro.back().p1.xPos != 0))) {
-				playerData p1 = {
-					self->m_player1->getPositionX(),
-					self->m_player1->getPositionY(),
-					self->m_player1->m_isUpsideDown,
-					-80085,
-					-80085,
-					-80085
-				};
-				playerData p2;
-				if (self->m_player2 != nullptr) {
-					p2 = {
-					self->m_player2->getPositionX(),
-					self->m_player2->getPositionY(),
-					self->m_player2->m_isUpsideDown,
-					-80085,
-					-80085,
-					-80085
-					};
-				} else {
-					p2.xPos = 0;
-				}
-				recorder.macro.push_back({true,recorder.currentFrame(),1,true,true,p1,p2});
-			}
-		}
-	}
-
-	if (recorder.state == state::playing) {
-			int frame = recorder.currentFrame();
-        	while (recorder.currentAction < static_cast<int>(recorder.macro.size()) &&
-			frame >= recorder.macro[recorder.currentAction].frame && !self->m_player1->m_isDead) {
-            	auto& currentActionIndex = recorder.macro[recorder.currentAction];
-
-				if (!safeModeEnabled && !isAndroid && mod->getSettingValue<bool>("auto_safe_mode")) {
-					safeModeEnabled = true;
-					safeMode::updateSafeMode();
-				}
-				playedMacro = true;
-				if (!mod->getSettingValue<bool>("override_macro_mode") && currentActionIndex.p1.xPos != 0) {
-						if (!areEqual(self->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
-						!areEqual(self->m_player1->getPositionY(), currentActionIndex.p1.yPos))
-								self->m_player1->setPosition(cocos2d::CCPoint(currentActionIndex.p1.xPos, currentActionIndex.p1.yPos));
-
-						if (self->m_player1->m_isUpsideDown != currentActionIndex.p1.upsideDown && currentActionIndex.posOnly)
-							self->m_player1->flipGravity(currentActionIndex.p1.upsideDown, true);
-
-					
-						if (currentActionIndex.p2.xPos != 0 && self->m_player2 != nullptr) {
-							if (!areEqual(self->m_player2->getPositionX(), currentActionIndex.p2.xPos) ||
-							!areEqual(self->m_player2->getPositionY(), currentActionIndex.p2.yPos))
-								self->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
-
-							if (self->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
-								self->m_player2->flipGravity(currentActionIndex.p2.upsideDown, true);
-
-						}
-				} else {
-				if ((currentActionIndex.p1.xPos != 0 && self->m_player1 != nullptr) && (!mod->getSettingValue<bool>("vanilla") || mod->getSettingValue<bool>("frame_fix"))) {
-					if (((!mod->getSettingValue<bool>("vanilla") && !mod->getSettingValue<bool>("frame_fix")) && lastHold)
-					|| mod->getSettingValue<bool>("frame_fix")) {
-						if (!areEqual(self->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
-						!areEqual(self->m_player1->getPositionY(), currentActionIndex.p1.yPos))
-							self->m_player1->setPosition(cocos2d::CCPoint(currentActionIndex.p1.xPos, currentActionIndex.p1.yPos));
-							
-
-						if (self->m_player1->m_isUpsideDown != currentActionIndex.p1.upsideDown && currentActionIndex.posOnly)
-							self->m_player1->flipGravity(currentActionIndex.p1.upsideDown, true);
-
-					
-						if (currentActionIndex.p2.xPos != 0 && self->m_player2 != nullptr) {
-							if (!areEqual(self->m_player2->getPositionX(), currentActionIndex.p2.xPos) ||
-							!areEqual(self->m_player2->getPositionY(), currentActionIndex.p2.yPos))
-								self->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
-
-							if (self->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
-								self->m_player2->flipGravity(currentActionIndex.p2.upsideDown, true);
-
-						}
-					}
-				}
-				}
-				if (!currentActionIndex.posOnly) {
-					playingAction = true;
-
-					self->handleButton(
-    				currentActionIndex.holding,
-    				((currentActionIndex.button < 4 && currentActionIndex.button > 0) ? currentActionIndex.button : 1),
-    				currentActionIndex.player1
-					);
-
-					if (currentActionIndex.holding) lastHold = true;
-					else lastHold = false;
-				} else if (currentActionIndex.p1.xPos == 0) {
-					playingAction = true;
-
-					self->handleButton(
-    				false,
-    				1,
-    				true
-					);
-
-					if (currentActionIndex.holding) lastHold = true;
-					else lastHold = false;
-				}
-
-            	recorder.currentAction++;
-        	}
-			playingAction = false;
-			if (recorder.currentAction >= recorder.macro.size()) {
-				if (stateLabel!=nullptr) stateLabel->removeFromParent();
-				clearState(true);
-			}
-		}
-}
+    if (recorder.state == state::recording) {
+            if (((playerHolding && !mod->getSettingValue<bool>("vanilla")) ||
+            mod->getSettingValue<bool>("frame_fix")) && !recorder.macro.empty()) {
+                
+                if (!(recorder.macro.back().frame == recorder.currentFrame() &&
+                (recorder.macro.back().posOnly || recorder.macro.back().p1.xPos != 0))) {
+                    playerData p1 = {
+                        this->m_player1->getPositionX(),
+                        this->m_player1->getPositionY(),
+                        this->m_player1->m_isUpsideDown,
+                        -80085,
+                        -80085,
+                        -80085
+                    };
+                    playerData p2;
+                    if (this->m_player2 != nullptr) {
+                        p2 = {
+                        this->m_player2->getPositionX(),
+                        this->m_player2->getPositionY(),
+                        this->m_player2->m_isUpsideDown,
+                        -80085,
+                        -80085,
+                        -80085
+                        };
+                    } else {
+                        p2.xPos = 0;
+                    }
+                    recorder.macro.push_back({true,recorder.currentFrame(),1,true,true,p1,p2});
+                }
+            }
+        }
+    
+        if (recorder.state == state::playing) {
+                int frame = recorder.currentFrame();
+                while (recorder.currentAction < static_cast<int>(recorder.macro.size()) &&
+                frame >= recorder.macro[recorder.currentAction].frame && !this->m_player1->m_isDead) {
+                    auto& currentActionIndex = recorder.macro[recorder.currentAction];
+    
+                    if (!safeModeEnabled && !isAndroid && mod->getSettingValue<bool>("auto_safe_mode")) {
+                        safeModeEnabled = true;
+                        safeMode::updateSafeMode();
+                    }
+                    playedMacro = true;
+                    if (!mod->getSettingValue<bool>("override_macro_mode") && currentActionIndex.p1.xPos != 0) {
+                            if (!areEqual(this->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
+                            !areEqual(this->m_player1->getPositionY(), currentActionIndex.p1.yPos))
+                                    this->m_player1->setPosition(cocos2d::CCPoint(currentActionIndex.p1.xPos, currentActionIndex.p1.yPos));
+    
+                            if (this->m_player1->m_isUpsideDown != currentActionIndex.p1.upsideDown && currentActionIndex.posOnly)
+                                this->m_player1->flipGravity(currentActionIndex.p1.upsideDown, true);
+    
+                        
+                            if (currentActionIndex.p2.xPos != 0 && this->m_player2 != nullptr) {
+                                if (!areEqual(this->m_player2->getPositionX(), currentActionIndex.p2.xPos) ||
+                                !areEqual(this->m_player2->getPositionY(), currentActionIndex.p2.yPos))
+                                    this->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
+    
+                                if (this->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
+                                    this->m_player2->flipGravity(currentActionIndex.p2.upsideDown, true);
+    
+                            }
+                    } else {
+                    if ((currentActionIndex.p1.xPos != 0 && this->m_player1 != nullptr) && (!mod->getSettingValue<bool>("vanilla") || mod->getSettingValue<bool>("frame_fix"))) {
+                        if (((!mod->getSettingValue<bool>("vanilla") && !mod->getSettingValue<bool>("frame_fix")) && lastHold)
+                        || mod->getSettingValue<bool>("frame_fix")) {
+                            if (!areEqual(this->m_player1->getPositionX(), currentActionIndex.p1.xPos) ||
+                            !areEqual(this->m_player1->getPositionY(), currentActionIndex.p1.yPos))
+                                this->m_player1->setPosition(cocos2d::CCPoint(currentActionIndex.p1.xPos, currentActionIndex.p1.yPos));
+                                
+    
+                            if (this->m_player1->m_isUpsideDown != currentActionIndex.p1.upsideDown && currentActionIndex.posOnly)
+                                this->m_player1->flipGravity(currentActionIndex.p1.upsideDown, true);
+    
+                        
+                            if (currentActionIndex.p2.xPos != 0 && this->m_player2 != nullptr) {
+                                if (!areEqual(this->m_player2->getPositionX(), currentActionIndex.p2.xPos) ||
+                                !areEqual(this->m_player2->getPositionY(), currentActionIndex.p2.yPos))
+                                    this->m_player2->setPosition(cocos2d::CCPoint(currentActionIndex.p2.xPos, currentActionIndex.p2.yPos));
+    
+                                if (this->m_player2->m_isUpsideDown != currentActionIndex.p2.upsideDown && currentActionIndex.posOnly)
+                                    this->m_player2->flipGravity(currentActionIndex.p2.upsideDown, true);
+    
+                            }
+                        }
+                    }
+                    }
+                    if (!currentActionIndex.posOnly) {
+                        playingAction = true;
+    
+                        this->handleButton(
+                        currentActionIndex.holding,
+                        ((currentActionIndex.button < 4 && currentActionIndex.button > 0) ? currentActionIndex.button : 1),
+                        currentActionIndex.player1
+                        );
+    
+                        if (currentActionIndex.holding) lastHold = true;
+                        else lastHold = false;
+                    } else if (currentActionIndex.p1.xPos == 0) {
+                        playingAction = true;
+    
+                        this->handleButton(
+                        false,
+                        1,
+                        true
+                        );
+    
+                        if (currentActionIndex.holding) lastHold = true;
+                        else lastHold = false;
+                    }
+    
+                    recorder.currentAction++;
+                }
+                playingAction = false;
+                if (recorder.currentAction >= recorder.macro.size()) {
+                    if (stateLabel!=nullptr) stateLabel->removeFromParent();
+                    clearState(true);
+                }
+            }
+    }
 	}
 	void update(float dt) {
 		if (recorder.state != state::off) {
