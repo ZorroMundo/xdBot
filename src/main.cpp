@@ -1309,7 +1309,9 @@ class $modify(PlayLayer) {
 	void postUpdate(float dt) {
 		PlayLayer::postUpdate(dt);
 if (isAndroid) {
-   if (recorder.state == state::recording) {
+if (recorder.state == state::recording) {
+    PlayerObject* player1 = this->m_player1;
+            PlayerObject* player2 = this->m_player2;
     if (((playerHolding && !mod->getSettingValue<bool>("vanilla")) ||
     mod->getSettingValue<bool>("frame_fix")) && !recorder.macro.empty()) {
         
@@ -1343,11 +1345,10 @@ if (isAndroid) {
 
 if (recorder.state == state::playing) {
         int frame = recorder.currentFrame();
+        
         while (recorder.currentAction < static_cast<int>(recorder.macro.size()) &&
         frame >= recorder.macro[recorder.currentAction].frame && !player1->m_isDead) {
             auto& currentActionIndex = recorder.macro[recorder.currentAction];
-            PlayerObject* player1 = this->m_player1;
-            PlayerObject* player2 = this->m_player2;
 
             if (!safeModeEnabled && !isAndroid && mod->getSettingValue<bool>("auto_safe_mode")) {
                 safeModeEnabled = true;
