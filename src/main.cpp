@@ -1398,7 +1398,7 @@ if (isAndroid) {
                     if (!currentActionIndex.posOnly) {
                         playingAction = true;
     
-                        this->handleButton(
+                        handleButton(
                         currentActionIndex.holding,
                         ((currentActionIndex.button < 4 && currentActionIndex.button > 0) ? currentActionIndex.button : 1),
                         currentActionIndex.player1
@@ -1409,7 +1409,7 @@ if (isAndroid) {
                     } else if (currentActionIndex.p1.xPos == 0) {
                         playingAction = true;
     
-                        this->handleButton(
+                        handleButton(
                         false,
                         1,
                         true
