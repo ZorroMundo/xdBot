@@ -1344,6 +1344,8 @@ if (recorder.state == state::recording) {
 }
 
 if (recorder.state == state::playing) {
+	 PlayerObject* player1 = this->m_player1;
+            PlayerObject* player2 = this->m_player2;
         int frame = recorder.currentFrame();
         
         while (recorder.currentAction < static_cast<int>(recorder.macro.size()) &&
