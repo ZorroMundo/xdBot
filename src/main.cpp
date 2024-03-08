@@ -167,19 +167,7 @@ public:
 		);
 	}
 	void recordAction(bool holding, int button, bool player1, int frame, GJBaseGameLayer* bgl, playerData p1Data, playerData p2Data) {
-		bool realp1;
-		if (isAndroid) {
-			bool plat = bgl->m_levelSettings->m_platformerMode;
-			realp1 = (GameManager::get()->getGameVariable("0010") && (!plat || button == 1)) ? !player1 : player1;
-			if (macro.size() >= 2 && plat) {
-					if (macro.back().holding == macro[macro.size()-2].holding &&
-					 macro.back().frame == macro[macro.size()-2].frame && macro[macro.size()-2].button != 1)
-						macro.pop_back();
-			}
-		}
-		else realp1 = player1;
-		
-    	macro.push_back({realp1, frame, button, holding, false, p1Data, p2Data});
+    	macro.push_back({player1, frame, button, holding, false, p1Data, p2Data});
 	}
 
 };
