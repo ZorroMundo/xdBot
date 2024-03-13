@@ -1351,7 +1351,7 @@ class $modify(PlayLayer) {
             PlayLayer::addObject(obj);
             switch(obj->m_objectType) {
                 case GameObjectType::Decoration:
-                    if (m_objectID != 44)
+                    if (obj->m_objectID != 44)
                         obj->setVisible(false);
                 break;
 		        case GameObjectType::Solid:
