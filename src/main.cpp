@@ -965,21 +965,6 @@ class $modify(GJGameLevel) {
     }
 };
 
-class $modify(GameObject) {
-    void setVisible(bool visible) {
-        if (!mod->getSettingValue<bool>("layout_mode")) return GameObject::setVisible(visible);
-        if (m_objectID != 44 && m_objectType == GameObjectType::Decoration)
-            GameObject::setVisible(false);
-        else {
-            m_activeMainColorID = -1;
-            m_activeDetailColorID = -1;
-            m_isHide = false;
-            this->setOpacity(255);
-            GameObject::setVisible(true);
-        }
-    }
-};
-
 class $modify(PlayerObject) {
 void playerDestroyed(bool p0) {
 	if (isAndroid) androidAction = nullptr;
@@ -1364,8 +1349,25 @@ class $modify(PlayLayer) {
         if (!mod->getSettingValue<bool>("layout_mode")) return PlayLayer::addObject(obj);
         if (!excludedIDs.contains(obj->m_objectID)) {
             PlayLayer::addObject(obj);
-            CCSpriteBatchNode* bn1 = MBO(CCSpriteBatchNode* , PlayLayer::get(), 1888);
-            bn1->addChild(obj);
+            switch(obj->m_objectType) {
+                case GameObjectType::Decoration:
+                    if (m_objectID != 44)
+                        obj->setVisible(false);
+                break;
+		        case GameObjectType::Solid:
+		        case GameObjectType::Hazard:
+		        case GameObjectType::AnimatedHazard:
+		        case GameObjectType::Slope:
+                    obj->m_activeMainColorID = -1;
+                    obj->m_activeDetailColorID = -1;
+                    obj->m_isHide = false;
+                    obj->setOpacity(255);
+			        obj->setVisible(true);
+			        if (!obj->getParent()) {
+                        CCSpriteBatchNode* bn1 = MBO(CCSpriteBatchNode* , PlayLayer::get(), 0x760);
+                        bn1->addChild(obj);
+                    }
+            }
         }
         
     }
