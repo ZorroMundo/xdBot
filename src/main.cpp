@@ -971,12 +971,12 @@ class $modify(GameObject) {
         if (m_objectID != 44 && m_objectType == GameObjectType::Decoration)
             GameObject::setVisible(false);
         else {
+            GameObject::setVisible(true);
             m_activeMainColorID = -1;
             m_activeDetailColorID = -1;
             m_isHide = false;
             CCSpriteBatchNode* bn1 = MBO(CCSpriteBatchNode* , PlayLayer::get(), 1888);
             bn1->addChild(this);
-            GameObject::setVisible(true);
         }
     }
 };
