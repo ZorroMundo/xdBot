@@ -1373,7 +1373,8 @@ class $modify(PlayLayer) {
                     obj->setOpacity(255);
 			        obj->setVisible(true);
 			        if (!obj->getParent())
-                        MBO(CCSpriteBatchNode* , PlayLayer::get(), 0x760)->addChild(obj);
+                        CCSpriteBatchNode* bn1 = MBO(CCSpriteBatchNode* , PlayLayer::get(), 0x760);
+                        bn1->addChild(obj);
             }
         }
         
