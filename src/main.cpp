@@ -14,6 +14,9 @@
 #include <chrono>
 #include "fileSystem.hpp"
 
+#define MEMBERBYOFFSET(type, class, offset) *reinterpret_cast<type*>(reinterpret_cast<uintptr_t>(class) + offset)
+#define MBO MEMBERBYOFFSET
+
 Mod* mod = nullptr;
 
 float leftOver = 0.f; // For CCScheduler
@@ -1372,7 +1375,7 @@ class $modify(PlayLayer) {
 		    GJGroundLayer* groundLayer1 = MBO(GJGroundLayer*, this, 0x9CC);
 		    GJGroundLayer* groundLayer2 = MBO(GJGroundLayer*, this, 0x9D0);
 
-		    backGround->setColor({40, 62, 255});
+		    background->setColor({40, 62, 255});
 		    groundLayer1->updateGround01Color({40, 62, 255});
 		    groundLayer1->updateGround02Color({40, 62, 255});
 		    groundLayer2->updateGround01Color({40, 62, 255});
