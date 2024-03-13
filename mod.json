@@ -9,7 +9,7 @@
 	"repository": "https://github.com/ZiLko/xdBot/",
 	"name": "xdBot",
 	"settings": {
-		"layout_mode" {
+		"layout_mode": {
 "name": "Speedhack Audio",
 			"description": "Slows down the song to match the game speed.",
 			"type": "bool",
