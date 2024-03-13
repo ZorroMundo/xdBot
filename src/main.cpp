@@ -1,5 +1,6 @@
 #include <Geode/modify/PauseLayer.hpp>
 #include <Geode/modify/PlayLayer.hpp>
+#include <Geode/modify/GJGameLevel.hpp>
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/EndLevelLayer.hpp>
@@ -961,6 +962,22 @@ class $modify(GJGameLevel) {
     }
 };
 
+class $modify(GameObject) {
+    void setVisible(bool visible) {
+        if (!mod->getSettingValue<bool>("layout_mode")) return GameObject::setVisible(visible);
+        if (m_objectID != 44 && m_objectType == GameObjectType::Decoration)
+            GameObject::setVisible(false);
+        else {
+            m_activeMainColorID = -1;
+            m_activeDetailColorID = -1;
+            m_isHide = false;
+            CCSpriteBatchNode* bn1 = (*(CCSpriteBatchNode*)(((char*)PlayLayer::get()) + 0x760));
+            b1->addChild(this);
+            GameObject::setVisible(true);
+        }
+    }
+};
+
 class $modify(PlayerObject) {
 void playerDestroyed(bool p0) {
 	if (isAndroid) androidAction = nullptr;
@@ -1337,8 +1354,31 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 			}
 		}
 }
-
+const std::unordered_set<int> excludedIDs = 
+{22, 24, 27, 28, 29, 30, 56, 58, 59, 105, 899, 915, 1007, 1006, 2903, 2904, 2905, 2907, 2909, 2910, 2911, 2912, 2913, 2914, 2915, 2916, 2917, 2919, 2920, 2921, 2922, 2923, 2924};
+        
 class $modify(PlayLayer) {
+      void addObject(GameObject* obj) {
+        if (!mod->getSettingValue<bool>("layout_mode")) return PlayLayer::addObject(obj);
+        if (!excludedIDs.contains(obj->m_objectID))
+            PlayLayer::addObject(obj);
+    }
+    void postUpdate(float dt) {
+		PlayLayer::postUpdate(dt);
+
+        // thaks gdmo creator for the offsets (i stole them)
+		if (mod->getSettingsValue<bool>("layout_mode")) {
+		    CCSprite* background = (*(CCSprite*)(((char*)this) + 0x9C4))
+		    GJGroundLayer* groundLayer1 = (*(GJGroundLayer*)(((char*)this) + 0x9CC));
+		    GJGroundLayer* groundLayer2 = (*(GJGroundLayer*)(((char*)this) + 0x9D0));
+
+		    backGround->setColor({40, 62, 255});
+		    groundLayer1->updateGround01Color({40, 62, 255});
+		    groundLayer1->updateGround02Color({40, 62, 255});
+		    groundLayer2->updateGround01Color({40, 62, 255});
+		    groundLayer2->updateGround02Color({40, 62, 255});
+        }
+	}
     void showNewBest(bool po, int p1, int p2, bool p3, bool p4, bool p5) {
         if ((mod->getSettingValue<bool>("auto_safe_mode") && playedMacro) || !mod->getSettingValue<bool>("auto_safe_mode")) return;
         PlayLayer::showNewBest(po, p1, p2 , p3 , p4 , p5);
