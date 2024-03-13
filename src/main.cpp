@@ -971,8 +971,8 @@ class $modify(GameObject) {
             m_activeMainColorID = -1;
             m_activeDetailColorID = -1;
             m_isHide = false;
-            CCSpriteBatchNode* bn1 = (*(CCSpriteBatchNode*)(((char*)PlayLayer::get()) + 0x760));
-            b1->addChild(this);
+            CCSpriteBatchNode* bn1 = MBO(CCSpriteBatchNode*, PlayLayer::get(), 1888);
+            bn1->addChild(this);
             GameObject::setVisible(true);
         }
     }
@@ -1367,7 +1367,7 @@ class $modify(PlayLayer) {
 		PlayLayer::postUpdate(dt);
 
         // thaks gdmo creator for the offsets (i stole them)
-		if (mod->getSettingsValue<bool>("layout_mode")) {
+		if (mod->getSettingValue<bool>("layout_mode")) {
 		    CCSprite* background = (*(CCSprite*)(((char*)this) + 0x9C4))
 		    GJGroundLayer* groundLayer1 = (*(GJGroundLayer*)(((char*)this) + 0x9CC));
 		    GJGroundLayer* groundLayer2 = (*(GJGroundLayer*)(((char*)this) + 0x9D0));
