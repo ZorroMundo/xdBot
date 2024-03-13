@@ -960,7 +960,7 @@ void onReset() {
 
 class $modify(GJGameLevel) {
     void savePercentage(int p0, bool p1, int p2, int p3, bool p4) {
-        if ((mod->getSettingValue<bool>("auto_safe_mode") && playedMacro) || !mod->getSettingValue<bool>("auto_safe_mode")) return;
+        if (mod->getSettingValue<bool>("auto_safe_mode") && playedMacro) return;
         GJGameLevel::savePercentage(p0, p1, p2, p3, p4);
     }
 };
@@ -971,12 +971,11 @@ class $modify(GameObject) {
         if (m_objectID != 44 && m_objectType == GameObjectType::Decoration)
             GameObject::setVisible(false);
         else {
-            GameObject::setVisible(true);
             m_activeMainColorID = -1;
             m_activeDetailColorID = -1;
             m_isHide = false;
-            CCSpriteBatchNode* bn1 = MBO(CCSpriteBatchNode* , PlayLayer::get(), 1888);
-            bn1->addChild(this);
+            this->setOpacity(255);
+            GameObject::setVisible(true);
         }
     }
 };
@@ -1363,8 +1362,12 @@ const std::unordered_set<int> excludedIDs =
 class $modify(PlayLayer) {
       void addObject(GameObject* obj) {
         if (!mod->getSettingValue<bool>("layout_mode")) return PlayLayer::addObject(obj);
-        if (!excludedIDs.contains(obj->m_objectID))
+        if (!excludedIDs.contains(obj->m_objectID)) {
             PlayLayer::addObject(obj);
+            CCSpriteBatchNode* bn1 = MBO(CCSpriteBatchNode* , PlayLayer::get(), 1888);
+            bn1->addChild(obj);
+        }
+        
     }
     void postUpdate(float dt) {
 		PlayLayer::postUpdate(dt);
@@ -1383,7 +1386,7 @@ class $modify(PlayLayer) {
         }
 	}
     void showNewBest(bool po, int p1, int p2, bool p3, bool p4, bool p5) {
-        if ((mod->getSettingValue<bool>("auto_safe_mode") && playedMacro) || !mod->getSettingValue<bool>("auto_safe_mode")) return;
+        if (mod->getSettingValue<bool>("auto_safe_mode") && playedMacro) return;
         PlayLayer::showNewBest(po, p1, p2 , p3 , p4 , p5);
     };
 
@@ -1492,9 +1495,10 @@ class $modify(PlayLayer) {
 
 	void levelComplete() {
 		if (stateLabel != nullptr) stateLabel->removeFromParent();
-		if (mod->getSettingValue<bool>("auto_safe_mode") && playedMacro) {
+
+		if (mod->getSettingValue<bool>("auto_safe_mode") && playedMacro)
 			PlayLayer::get()->m_isTestMode = true;
-		}
+
 		PlayLayer::levelComplete();
 		if (recorder.state != state::off)
 			shouldPlay2 = true;
