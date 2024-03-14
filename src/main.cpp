@@ -1341,6 +1341,13 @@ void GJBaseGameLayerProcessCommands(GJBaseGameLayer* self) {
 			}
 		}
 }
+class $modify(GameObject) {
+    void setVisible(bool visible) {
+        if (!mod->getSettingValue<bool>("layout_mode")) return GameObject::setVisible(visible);
+        if (m_objectID != 44 && m_objectType == GameObjectType::Decoration)
+            GameObject::setVisible(false);
+    }
+};
 const std::unordered_set<int> excludedIDs = 
 {22, 24, 27, 28, 29, 30, 56, 58, 59, 105, 899, 915, 1007, 1006, 2903, 2904, 2905, 2907, 2909, 2910, 2911, 2912, 2913, 2914, 2915, 2916, 2917, 2919, 2920, 2921, 2922, 2923, 2924};
         
@@ -1363,11 +1370,6 @@ class $modify(PlayLayer) {
                         CCSpriteBatchNode* bn1 = MBO(CCSpriteBatchNode* , PlayLayer::get(), 0x760);
                         bn1->addChild(obj);
                     }
-				break;
-				default:
-					if (obj->m_objectID != 44 && obj->m_objectType == GameObjectType::Decoration)
-            			obj->setVisible(false);
-				break;
             }
         }
         
