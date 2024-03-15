@@ -358,8 +358,8 @@ public:
 
         std::string title = "Load Macro";
         if (searchString != "") title += (" (" + searchString + ")"); 
-        
-        auto list = GJListLayer::create(mcrList, title, {0, 0, 0, 0}, 280, 180, 2);
+
+        auto list = GJListLayer::create(mcrList, title.c_str(), {0, 0, 0, 0}, 280, 180, 2);
 
         m_mainLayer->addChild(list);
 
