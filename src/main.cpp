@@ -54,69 +54,6 @@ const int fpsArr[4] = {60,120,180,240};
 
 std::map<CheckpointObject*, int> checkpoints;
 
-void eraseActions(CheckpointObject* cp, PlayLayer* pl) {
-	if (!checkpoints.contains(cp)) return;
-        	if (pl->m_isPracticeMode && !recorder.macro.empty() && recorder.currentFrame() != 0) {
-  				int frame = checkpoints[cp]; 
-				try {
-            	if (!recorder.macro.empty()) {
-						for (auto it = recorder.macro.rbegin(); it != recorder.macro.rend(); ++it) {
-        					if (it->frame >= frame) {
-								try {
-									recorder.macro.erase((it + 1).base());
-								} catch (const std::exception& e) {
-									log::debug("wtfffff amaze? - {}",e);
-								}
-							} else break;
-    					}
-						bool fix = false;
-					if (recorder.macro.size() >= 2) {
-							if (recorder.macro.back().holding || (recorder.macro[recorder.macro.size() - 2].holding && !recorder.macro[recorder.macro.size() - 2].player1))
-								fix = true;
-						} else if (recorder.macro.back().holding)
-							fix = true;
-
-						if (fix) {
-						playerData p1;
-						playerData p2;
-						p1 = {
-							0.f,
-							0.f,
-							false,
-							-80085,
-							-80085,
-							-80085
-						};
-						p2 = {
-							0.f,
-							0.f,
-							false,
-							-80085,
-							-80085,
-							-80085
-						};
-						recorder.macro.push_back({false, frame, 1, false, false, p1, p2});
-						recorder.macro.push_back({true, frame, 1, false, false, p1, p2});
-						if (pl->m_levelSettings->m_platformerMode) {
-							recorder.macro.push_back({false, frame, 2, false, false, p1, p2});
-							recorder.macro.push_back({true, frame, 2, false, false, p1, p2});
-							recorder.macro.push_back({false, frame, 3, false, false, p1, p2});
-							recorder.macro.push_back({true, frame, 3, false, false, p1, p2});
-						}
-					}
-				}
-				} catch (const std::exception& e) {
-					log::debug("wtfffff? - {}",e);
-				}
-        	} else {
-				if (!recorder.macro.empty())
-					recorder.macro.clear();
-
-				recorder.android = false;
-				recorder.fps = fpsArr[fpsIndex];
-			} 
-}
-
 
 void releaseKeys() {
 	for (int row = 0; row < 2; ++row) {
@@ -207,6 +144,71 @@ public:
 };
 
 recordSystem recorder;
+
+
+void eraseActions(CheckpointObject* cp, PlayLayer* pl) {
+	if (!checkpoints.contains(cp)) return;
+        	if (pl->m_isPracticeMode && !recorder.macro.empty() && recorder.currentFrame() != 0) {
+  				int frame = checkpoints[cp]; 
+				try {
+            	if (!recorder.macro.empty()) {
+						for (auto it = recorder.macro.rbegin(); it != recorder.macro.rend(); ++it) {
+        					if (it->frame >= frame) {
+								try {
+									recorder.macro.erase((it + 1).base());
+								} catch (const std::exception& e) {
+									log::debug("wtfffff amaze? - {}",e);
+								}
+							} else break;
+    					}
+						bool fix = false;
+					if (recorder.macro.size() >= 2) {
+							if (recorder.macro.back().holding || (recorder.macro[recorder.macro.size() - 2].holding && !recorder.macro[recorder.macro.size() - 2].player1))
+								fix = true;
+						} else if (recorder.macro.back().holding)
+							fix = true;
+
+						if (fix) {
+						playerData p1;
+						playerData p2;
+						p1 = {
+							0.f,
+							0.f,
+							false,
+							-80085,
+							-80085,
+							-80085
+						};
+						p2 = {
+							0.f,
+							0.f,
+							false,
+							-80085,
+							-80085,
+							-80085
+						};
+						recorder.macro.push_back({false, frame, 1, false, false, p1, p2});
+						recorder.macro.push_back({true, frame, 1, false, false, p1, p2});
+						if (pl->m_levelSettings->m_platformerMode) {
+							recorder.macro.push_back({false, frame, 2, false, false, p1, p2});
+							recorder.macro.push_back({true, frame, 2, false, false, p1, p2});
+							recorder.macro.push_back({false, frame, 3, false, false, p1, p2});
+							recorder.macro.push_back({true, frame, 3, false, false, p1, p2});
+						}
+					}
+				}
+				} catch (const std::exception& e) {
+					log::debug("wtfffff? - {}",e);
+				}
+        	} else {
+				if (!recorder.macro.empty())
+					recorder.macro.clear();
+
+				recorder.android = false;
+				recorder.fps = fpsArr[fpsIndex];
+			} 
+}
+
 
 class RecordLayer : public geode::Popup<std::string const&> {
 	CCLabelBMFont* fpsLabel = nullptr;
