@@ -295,7 +295,7 @@ public:
         button->setPosition(corner + CCPOINT_CREATE(40, 65));
         menu->addChild(button);
 
-        if (searchString == "") menu->setVisible(false);
+        if (searchString == "") button->setVisible(false);
 
         tSprite = CCSprite::createWithSpriteFrameName("gj_findBtn_001.png");
         tSprite->setScale(0.8f);
