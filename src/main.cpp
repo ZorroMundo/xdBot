@@ -52,9 +52,6 @@ const int playerEnums[2][3] = {
 
 const int fpsArr[4] = {60,120,180,240};
 
-std::map<CheckpointObject*, int> checkpoints;
-
-
 void releaseKeys() {
 	for (int row = 0; row < 2; ++row) {
         for (int col = 0; col < 3; ++col) {
@@ -96,7 +93,6 @@ struct data {
 	playerData p2;
 };
 
-data* androidAction = nullptr;
 
 enum state {
     off,
@@ -111,6 +107,8 @@ public:
     state state = off;
  	size_t currentAction = 0;
    	std::vector<data> macro;
+	data* androidAction = nullptr;
+	std::map<CheckpointObject*, int> checkpoints;
 
 	int currentFrame() {
 		int fps2 = (android) ? 240 : fps;
@@ -147,18 +145,12 @@ recordSystem recorder;
 
 
 void eraseActions(CheckpointObject* cp, PlayLayer* pl) {
-	if (!checkpoints.contains(cp)) return;
-  				int frame = checkpoints[cp]; 
-				log::debug("{}", frame);
-				try {
+	if (!recorder.checkpoints.contains(cp)) return;
+  				int frame = recorder.checkpoints[cp]; 
             	if (!recorder.macro.empty()) {
 						for (auto it = recorder.macro.rbegin(); it != recorder.macro.rend(); ++it) {
         					if (it->frame >= frame) {
-								try {
-									recorder.macro.erase((it + 1).base());
-								} catch (const std::exception& e) {
-									log::debug("wtfffff amaze? - {}",e);
-								}
+								recorder.macro.erase((it + 1).base());
 							} else break;
     					}
 						bool fix = false;
@@ -196,9 +188,6 @@ void eraseActions(CheckpointObject* cp, PlayLayer* pl) {
 							recorder.macro.push_back({true, frame, 3, false, false, p1, p2});
 						}
 					}
-				}
-				} catch (const std::exception& e) {
-					log::debug("wtfffff? - {}",e);
 				}
 }
 
@@ -700,6 +689,7 @@ void clearState(bool safeMode) {
 	}
 	
 	recorder.state = state::off;
+	recorder.checkpoints.clear();
 
 	playingAction = false;
 
@@ -727,7 +717,7 @@ void clearState(bool safeMode) {
 	frameLabel = nullptr;
 	stateLabel = nullptr;
 
-	androidAction = nullptr;
+	recorder.androidAction = nullptr;
 	leftOver = 0.f;
 
 	if (PlayLayer::get()) {
@@ -1002,7 +992,7 @@ void onReset() {
 		playerHolding = false;
 		leftOver = 0.f;
 
-		if (isAndroid) androidAction = nullptr;
+		if (isAndroid) recorder.androidAction = nullptr;
 		
 		if (playedMacro) playedMacro = false;
 
@@ -1029,7 +1019,7 @@ class $modify(GJGameLevel) {
 
 class $modify(PlayerObject) {
 void playerDestroyed(bool p0) {
-	if (isAndroid) androidAction = nullptr;
+	if (isAndroid) recorder.androidAction = nullptr;
 	if  (isAndroid && mod->getSettingValue<bool>("auto_safe_mode") && playedMacro) {
 		noDelayedReset = true;
 		onReset();
@@ -1147,16 +1137,16 @@ class $modify(GJBaseGameLayer) {
 			recorder.recordAction(holding, button, player1, frame, this, p1, p2);
 		} else if (recorder.state == state::playing) {
 			GJBaseGameLayer::handleButton(holding,button,player1);
-			if (androidAction != nullptr) {
-			if (androidAction->p1.xPos != 0) {
-				if (!areEqual(this->m_player1->getPositionX(), androidAction->p1.xPos) ||
-				!areEqual(this->m_player1->getPositionY(), androidAction->p1.yPos))
-					this->m_player1->setPosition(cocos2d::CCPoint(androidAction->p1.xPos, androidAction->p1.yPos));
+			if (recorder.androidAction != nullptr) {
+			if (recorder.androidAction->p1.xPos != 0) {
+				if (!areEqual(this->m_player1->getPositionX(), recorder.androidAction->p1.xPos) ||
+				!areEqual(this->m_player1->getPositionY(), recorder.androidAction->p1.yPos))
+					this->m_player1->setPosition(cocos2d::CCPoint(recorder.androidAction->p1.xPos, recorder.androidAction->p1.yPos));
 					
-				if (androidAction->p2.xPos != 0 && this->m_player2 != nullptr) {
-					if (!areEqual(this->m_player2->getPositionX(), androidAction->p2.xPos) ||
-					!areEqual(this->m_player2->getPositionY(), androidAction->p2.yPos))
-						this->m_player2->setPosition(cocos2d::CCPoint(androidAction->p2.xPos, androidAction->p2.yPos));
+				if (recorder.androidAction->p2.xPos != 0 && this->m_player2 != nullptr) {
+					if (!areEqual(this->m_player2->getPositionX(), recorder.androidAction->p2.xPos) ||
+					!areEqual(this->m_player2->getPositionY(), recorder.androidAction->p2.yPos))
+						this->m_player2->setPosition(cocos2d::CCPoint(recorder.androidAction->p2.xPos, recorder.androidAction->p2.yPos));
 
 				}
 			}
@@ -1169,13 +1159,10 @@ class $modify(GJBaseGameLayer) {
 			if (!mod->getSettingValue<bool>("vanilla") || mod->getSettingValue<bool>("frame_fix")) {
 				if (!mod->getSettingValue<bool>("frame_fix")) playerHolding = holding;
 				if (!recorder.macro.empty()) {
-					try {
-						if (recorder.macro.back().frame == recorder.currentFrame() && recorder.macro.back().posOnly) {
-							recorder.macro.pop_back();
-						}
-					} catch (const std::exception& e) {
-						log::debug("wtfffff amaze real? - {}",e);
+					if (recorder.macro.back().frame == recorder.currentFrame() && recorder.macro.back().posOnly) {
+						recorder.macro.pop_back();
 					}
+					
 				}
 				p1 = {
 				this->m_player1->getPositionX(),
@@ -1258,7 +1245,7 @@ if (recorder.state == state::playing && isAndroid) {
 			frame >= recorder.macro[recorder.currentAction].frame && !this->m_player1->m_isDead) {
 
             	auto& currentActionIndex = recorder.macro[recorder.currentAction];
-				androidAction = &currentActionIndex;
+				recorder.androidAction = &currentActionIndex;
 				
 				if (!currentActionIndex.posOnly) {
 					int player = (this->m_levelSettings->m_twoPlayerMode)
@@ -1424,7 +1411,7 @@ class $modify(PlayLayer) {
 	void storeCheckpoint(CheckpointObject* cp) {
 		PlayLayer::storeCheckpoint(cp);
 		if (recorder.state == state::recording)
-			checkpoints[cp] = recorder.currentFrame();
+			recorder.checkpoints[cp] = recorder.currentFrame();
 	}
 
       void addObject(GameObject* obj) {
@@ -1495,7 +1482,7 @@ class $modify(PlayLayer) {
 			leftOver = 0.f;
 		}
 
-		if (isAndroid) androidAction = nullptr;
+		if (isAndroid) recorder.androidAction = nullptr;
 
 		if (playedMacro) playedMacro = false;
 
