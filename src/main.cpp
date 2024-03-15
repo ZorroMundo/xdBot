@@ -478,7 +478,7 @@ void searchMacroPopup::searchMacro(CCObject*) {
 		clearSearch(nullptr);
 		return;
 	}
-	string = std::string(macroNameInput->getString());
+	searchString = std::string(macroNameInput->getString());
 	refreshMenu = true;
 }
 
