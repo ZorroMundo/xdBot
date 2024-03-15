@@ -146,49 +146,49 @@ recordSystem recorder;
 
 void eraseActions(CheckpointObject* cp, PlayLayer* pl) {
 	if (!recorder.checkpoints.contains(cp)) return;
-  				int frame = recorder.checkpoints[cp]; 
-            	if (!recorder.macro.empty()) {
-						for (auto it = recorder.macro.rbegin(); it != recorder.macro.rend(); ++it) {
-        					if (it->frame >= frame) {
-								recorder.macro.erase((it + 1).base());
-							} else break;
-    					}
-						bool fix = false;
-					if (recorder.macro.size() >= 2) {
-							if (recorder.macro.back().holding || (recorder.macro[recorder.macro.size() - 2].holding && !recorder.macro[recorder.macro.size() - 2].player1))
-								fix = true;
-						} else if (recorder.macro.back().holding)
-							fix = true;
+  	int frame = recorder.checkpoints[cp]; 
+    if (!recorder.macro.empty()) {
+		for (auto it = recorder.macro.rbegin(); it != recorder.macro.rend(); ++it) {
+        	if (it->frame >= frame) {
+				recorder.macro.erase((it + 1).base());
+			} else break;
+    	}
+		bool fix = false;
+		if (recorder.macro.size() >= 2) {
+			if (recorder.macro.back().holding || (recorder.macro[recorder.macro.size() - 2].holding && !recorder.macro[recorder.macro.size() - 2].player1))
+				fix = true;
+			} else if (recorder.macro.back().holding)
+				fix = true;
 
-						if (fix) {
-						playerData p1;
-						playerData p2;
-						p1 = {
-							0.f,
-							0.f,
-							false,
-							-80085,
-							-80085,
-							-80085
-						};
-						p2 = {
-							0.f,
-							0.f,
-							false,
-							-80085,
-							-80085,
-							-80085
-						};
-						recorder.macro.push_back({false, frame, 1, false, false, p1, p2});
-						recorder.macro.push_back({true, frame, 1, false, false, p1, p2});
-						if (pl->m_levelSettings->m_platformerMode) {
-							recorder.macro.push_back({false, frame, 2, false, false, p1, p2});
-							recorder.macro.push_back({true, frame, 2, false, false, p1, p2});
-							recorder.macro.push_back({false, frame, 3, false, false, p1, p2});
-							recorder.macro.push_back({true, frame, 3, false, false, p1, p2});
-						}
-					}
-				}
+			if (fix) {
+			playerData p1;
+			playerData p2;
+			p1 = {
+				0.f,
+				0.f,
+				false,
+				-80085,
+				-80085,
+				-80085
+			};
+			p2 = {
+				0.f,
+				0.f,
+				false,
+				-80085,
+				-80085,
+				-80085
+			};
+			recorder.macro.push_back({false, frame, 1, false, false, p1, p2});
+			recorder.macro.push_back({true, frame, 1, false, false, p1, p2});
+			if (pl->m_levelSettings->m_platformerMode) {
+				recorder.macro.push_back({false, frame, 2, false, false, p1, p2});
+				recorder.macro.push_back({true, frame, 2, false, false, p1, p2});
+				recorder.macro.push_back({false, frame, 3, false, false, p1, p2});
+				recorder.macro.push_back({true, frame, 3, false, false, p1, p2});
+			}
+		}
+	}
 }
 
 
@@ -465,6 +465,23 @@ public:
 	}
 };
 
+void searchMacroPopup::openSearchMacro(CCObject*) {
+	auto layer = create();
+	layer->m_noElasticity = (static_cast<float>(mod->getSettingValue<double>("speedhack")) < 1
+	 && recorder.state == state::recording) ? true : false;
+	layer->show();
+}
+
+void searchMacroPopup::searchMacro(CCObject*) {
+	keyBackClicked();
+  	if (std::string(macroNameInput->getString()).length() < 1) {
+		clearSearch(nullptr);
+		return;
+	}
+	string = std::string(macroNameInput->getString());
+	refreshMenu = true;
+}
+
 void saveMacroPopup::openSaveMacro(CCObject*) {
 	if (recorder.macro.empty()) {
 		FLAlertLayer::create(
@@ -481,7 +498,7 @@ void saveMacroPopup::openSaveMacro(CCObject*) {
 }
 
 void saveMacroPopup::saveMacro(CCObject*) {
-  if (std::string(macroNameInput->getString()).length() < 1) {
+  	if (std::string(macroNameInput->getString()).length() < 1) {
 		FLAlertLayer::create(
     	"Save Macro",   
     	"Macro name can't be <cl>empty</c>.",  
@@ -1575,6 +1592,18 @@ int syncCooldown = 0;
 int holdCooldown = 0;
 class $modify(CCScheduler) {
 	void update(float dt) {
+		if (refreshMenu) {
+			refreshMenu = false;
+			CCArray* children = CCDirector::sharedDirector()->getRunningScene()->getChildren();
+			CCObject* child;
+			CCARRAY_FOREACH(children, child) {
+    			loadMacroPopup* layer = dynamic_cast<loadMacroPopup*>(child);
+    			if (layer) {
+        			layer->refresh();
+					break;
+   				}
+			}
+		}
 		if (recorder.state == state::off) return CCScheduler::update(dt);
 
 		if (holdV) holdCooldown++;
