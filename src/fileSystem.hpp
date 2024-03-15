@@ -14,6 +14,11 @@
 bool refreshMenu = false;
 std::string searchString = "";
 
+std::string toLower(std::string str) {
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    return str;
+}
+
 #define CCPOINT_CREATE(__X__,__Y__) cocos2d::CCPointMake((float)(__X__), (float)(__Y__))
 
 using namespace geode::prelude;
@@ -292,7 +297,7 @@ public:
             this,
             menu_selector(searchMacroPopup::clearSearch)
         );
-        button->setPosition(corner + CCPOINT_CREATE(40, 65));
+        button->setPosition(corner + CCPOINT_CREATE(-20, 65));
         menu->addChild(button);
 
         if (searchString == "") button->setVisible(false);
@@ -304,7 +309,7 @@ public:
             this,
             menu_selector(searchMacroPopup::openSearchMacro)
         );
-        button->setPosition(corner + CCPOINT_CREATE(40, 20));
+        button->setPosition(corner + CCPOINT_CREATE(-20, 20));
         menu->addChild(button);
 
         if (isAndroid) {
@@ -314,8 +319,9 @@ public:
                 std::locale utf8_locale(std::locale(), new std::codecvt_utf8<wchar_t>);
 
                 std::wifstream file;
-
-                if (macros.value()[i].extension() == ".xd") {
+                
+                if (macros.value()[i].extension() == ".xd"
+                && (toLower(macros.value()[i].filename().string()).find(toLower(searchString)) != std::string::npos || searchString == "")) {
                     file.open(wideString);
                     file.imbue(utf8_locale);
                     if (file){
@@ -333,10 +339,11 @@ public:
 
             std::wifstream file;
 
-            if (macros.value()[i].extension() == ".xd") {
+            if (macros.value()[i].extension() == ".xd"
+            && (toLower(macros.value()[i].filename().string()).find(toLower(searchString)) != std::string::npos || searchString == "")) {
                 file.open(wideString);
                 file.imbue(utf8_locale);
-                if (file){
+                if (file) {
                     macroCell* cell = macroCell::create(macros.value()[i].filename().string().substr(0, macros.value()[i].filename().string().find_last_of('.')));
                     macroList->addObject(cell);
                 }
@@ -349,7 +356,7 @@ public:
         mcrList->setScaleX(0.89f);
         mcrList->setPosition({-14, -9.5f});
 
-        auto list = GJListLayer::create(mcrList, "Load Macro", {0, 0, 0, 0}, 280, 180, 2);
+        auto list = GJCommentListLayer::create(mcrList, "Load Macro", {0, 0, 0, 0}, 280, 180, 2);
 
         m_mainLayer->addChild(list);
 
