@@ -132,7 +132,7 @@ public:
         inputBg->setPosition(winSize/2 + CCPOINT_CREATE(0,7));
         inputBg->setContentSize({ 235, 54 });
 
-        macroNameInput = CCTextInputNode::create(150, 30, "Macro Name", "bigFont.fnt");
+        macroNameInput = CCTextInputNode::create(150, 30, "Search", "bigFont.fnt");
         macroNameInput->m_textField->setAnchorPoint({ 0.5f, 0.5f });
         macroNameInput->ignoreAnchorPointForPosition(true);
         macroNameInput->m_placeholderLabel->setAnchorPoint({ 0.5f, 0.5f });
@@ -142,19 +142,19 @@ public:
         macroNameInput->setMouseEnabled(true);
         macroNameInput->setTouchEnabled(true);
 
-        auto title = CCLabelBMFont::create("Save Macro", "bigFont.fnt");
+        auto title = CCLabelBMFont::create("Search Macro", "bigFont.fnt");
         title->setPosition(winSize/2 + CCPOINT_CREATE(0,50));
         title->setScale(0.6f);
         m_mainLayer->addChild(title);
 
-        auto btnSpr = ButtonSprite::create("Save");
+        auto btnSpr = ButtonSprite::create("Search");
         btnSpr->setScale(0.9f);
         auto menu = CCMenu::create();
         menu->setPosition({0,0});
         auto btn = CCMenuItemSpriteExtra::create(
             btnSpr,
             this,
-            menu_selector(searchMacroPopup::saveMacro)
+            menu_selector(searchMacroPopup::searchMacro)
         );
 
         btn->setPosition(winSize/2 + CCPOINT_CREATE(0,-40));
