@@ -148,8 +148,8 @@ recordSystem recorder;
 
 void eraseActions(CheckpointObject* cp, PlayLayer* pl) {
 	if (!checkpoints.contains(cp)) return;
-        	if (pl->m_isPracticeMode && !recorder.macro.empty() && recorder.currentFrame() != 0) {
   				int frame = checkpoints[cp]; 
+				log::debug("{}", frame);
 				try {
             	if (!recorder.macro.empty()) {
 						for (auto it = recorder.macro.rbegin(); it != recorder.macro.rend(); ++it) {
@@ -200,13 +200,6 @@ void eraseActions(CheckpointObject* cp, PlayLayer* pl) {
 				} catch (const std::exception& e) {
 					log::debug("wtfffff? - {}",e);
 				}
-        	} else {
-				if (!recorder.macro.empty())
-					recorder.macro.clear();
-
-				recorder.android = false;
-				recorder.fps = fpsArr[fpsIndex];
-			} 
 }
 
 
@@ -1429,10 +1422,9 @@ class $modify(PlayLayer) {
 	}
 
 	void storeCheckpoint(CheckpointObject* cp) {
+		PlayLayer::storeCheckpoint(cp);
 		if (recorder.state == state::recording)
 			checkpoints[cp] = recorder.currentFrame();
-			
-		PlayLayer::storeCheckpoint(cp);
 	}
 
       void addObject(GameObject* obj) {
@@ -1518,7 +1510,7 @@ class $modify(PlayLayer) {
         		channel->setPitch(1);
 			}
 		} else if (recorder.state != state::off) {
-        	if (!this->m_isPracticeMode) {
+        	if (!this->m_isPracticeMode || recorder.currentFrame() == 0) {
 				recorder.macro.clear();
 				recorder.android = false;
 				recorder.fps = fpsArr[fpsIndex];
@@ -1528,7 +1520,7 @@ class $modify(PlayLayer) {
 
 	void levelComplete() {
 		if (stateLabel != nullptr) stateLabel->removeFromParent();
-
+		// thaks viper for letting me steal this safe mode B)
 		if (mod->getSettingValue<bool>("auto_safe_mode") && playedMacro)
 			PlayLayer::get()->m_isTestMode = true;
 
