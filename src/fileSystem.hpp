@@ -12,7 +12,7 @@
 #endif
 
 bool refreshMenu = false;
-std::string search = "";
+std::string searchString = "";
 
 #define CCPOINT_CREATE(__X__,__Y__) cocos2d::CCPointMake((float)(__X__), (float)(__Y__))
 
@@ -177,8 +177,8 @@ public:
     }
 
     void clearSearch(CCObject*) {
-        if (search == "") return;
-        search = "";
+        if (searchString == "") return;
+        searchString = "";
         refreshMenu = true;
     }
 
@@ -290,12 +290,12 @@ public:
         button = CCMenuItemSpriteExtra::create(
             tSprite,
             this,
-            menu_selector(loadMacroPopup::clearSearch)
+            menu_selector(searchMacroPopup::clearSearch)
         );
         button->setPosition(corner + CCPOINT_CREATE(40, 65));
         menu->addChild(button);
 
-        if (search == "") menu->setVisible(false);
+        if (searchString == "") menu->setVisible(false);
 
         tSprite = CCSprite::createWithSpriteFrameName("gj_findBtn_001.png");
         tSprite->setScale(0.8f);
