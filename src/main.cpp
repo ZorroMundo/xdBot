@@ -1423,7 +1423,7 @@ const std::unordered_set<int> excludedIDs =
 class $modify(PlayLayer) {
 	void loadFromCheckpoint(CheckpointObject* cp) {
 		if (recorder.state == state::recording)
-			recorder.eraseActions(cp, this);
+			eraseActions(cp, this);
 
 		PlayLayer::loadFromCheckpoint(cp);
 	}
