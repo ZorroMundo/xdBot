@@ -356,7 +356,10 @@ public:
         mcrList->setScaleX(0.89f);
         mcrList->setPosition({-14, -9.5f});
 
-        auto list = GJListLayer::create(mcrList, "Load Macro", {0, 0, 0, 0}, 280, 180, 2);
+        std::string title = "Load Macro";
+        if (searchString != "") title += (" (" + searchString + ")"); 
+        
+        auto list = GJListLayer::create(mcrList, title, {0, 0, 0, 0}, 280, 180, 2);
 
         m_mainLayer->addChild(list);
 
