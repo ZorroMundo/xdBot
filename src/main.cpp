@@ -1431,6 +1431,8 @@ class $modify(PlayLayer) {
 	void storeCheckpoint(CheckpointObject* cp) {
 		if (recorder.state == state::recording)
 			checkpoints[cp] = recorder.currentFrame();
+			
+		PlayLayer::storeCheckpoint(cp);
 	}
 
       void addObject(GameObject* obj) {
