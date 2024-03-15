@@ -2,6 +2,7 @@
 #include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/GJGameLevel.hpp>
 #include <Geode/modify/PlayerObject.hpp>
+#include <Geode/modify/CheckpointObject.hpp>
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/EndLevelLayer.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
@@ -50,6 +51,72 @@ const int playerEnums[2][3] = {
 };
 
 const int fpsArr[4] = {60,120,180,240};
+
+std::map<CheckpointObject*, int> checkpoints;
+
+void eraseActions(CheckpointObject* cp, PlayLayer* pl) {
+	if (!checkpoints.contains(cp)) return;
+        	if (pl->m_isPracticeMode && !recorder.macro.empty() && recorder.currentFrame() != 0) {
+  				int frame = checkpoints[cp]; 
+				try {
+            	if (!recorder.macro.empty()) {
+						for (auto it = recorder.macro.rbegin(); it != recorder.macro.rend(); ++it) {
+        					if (it->frame >= frame) {
+								try {
+									recorder.macro.erase((it + 1).base());
+								} catch (const std::exception& e) {
+									log::debug("wtfffff amaze? - {}",e);
+								}
+							} else break;
+    					}
+						bool fix = false;
+					if (recorder.macro.size() >= 2) {
+							if (recorder.macro.back().holding || (recorder.macro[recorder.macro.size() - 2].holding && !recorder.macro[recorder.macro.size() - 2].player1))
+								fix = true;
+						} else if (recorder.macro.back().holding)
+							fix = true;
+
+						if (fix) {
+						playerData p1;
+						playerData p2;
+						p1 = {
+							0.f,
+							0.f,
+							false,
+							-80085,
+							-80085,
+							-80085
+						};
+						p2 = {
+							0.f,
+							0.f,
+							false,
+							-80085,
+							-80085,
+							-80085
+						};
+						recorder.macro.push_back({false, frame, 1, false, false, p1, p2});
+						recorder.macro.push_back({true, frame, 1, false, false, p1, p2});
+						if (pl->m_levelSettings->m_platformerMode) {
+							recorder.macro.push_back({false, frame, 2, false, false, p1, p2});
+							recorder.macro.push_back({true, frame, 2, false, false, p1, p2});
+							recorder.macro.push_back({false, frame, 3, false, false, p1, p2});
+							recorder.macro.push_back({true, frame, 3, false, false, p1, p2});
+						}
+					}
+				}
+				} catch (const std::exception& e) {
+					log::debug("wtfffff? - {}",e);
+				}
+        	} else {
+				if (!recorder.macro.empty())
+					recorder.macro.clear();
+
+				recorder.android = false;
+				recorder.fps = fpsArr[fpsIndex];
+			} 
+}
+
 
 void releaseKeys() {
 	for (int row = 0; row < 2; ++row) {
@@ -1352,6 +1419,18 @@ const std::unordered_set<int> excludedIDs =
 {22, 24, 27, 28, 29, 30, 56, 58, 59, 105, 899, 915, 1007, 1006, 2903, 2904, 2905, 2907, 2909, 2910, 2911, 2912, 2913, 2914, 2915, 2916, 2917, 2919, 2920, 2921, 2922, 2923, 2924};
         
 class $modify(PlayLayer) {
+	void loadFromCheckpoint(CheckpointObject* cp) {
+		if (recorder.state == state::recording)
+			recorder.eraseActions(cp, this);
+
+		PlayLayer::loadFromCheckpoint(cp);
+	}
+
+	void storeCheckpoint(CheckpointObject* cp) {
+		if (recorder.state == state::recording)
+			checkpoints[cp] = recorder.currentFrame();
+	}
+
       void addObject(GameObject* obj) {
         if (!mod->getSettingValue<bool>("layout_mode")) return PlayLayer::addObject(obj);
         if (!excludedIDs.contains(obj->m_objectID)) {
@@ -1430,71 +1509,16 @@ class $modify(PlayLayer) {
 			playingAction = false;
 			recorder.currentAction = 0;
 			if (mod->getSettingValue<bool>("speedhack_audio")) {
-			FMOD::ChannelGroup* channel;
-        	FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
-        	channel->setPitch(1);
+				FMOD::ChannelGroup* channel;
+        		FMODAudioEngine::sharedEngine()->m_system->getMasterChannelGroup(&channel);
+        		channel->setPitch(1);
 			}
 		} else if (recorder.state != state::off) {
-			checkUI();
-        	if (this->m_isPracticeMode && !recorder.macro.empty() && recorder.currentFrame() != 0) {
-  				int frame = recorder.currentFrame(); 
-				try {
-            	if (!recorder.macro.empty()) {
-						for (auto it = recorder.macro.rbegin(); it != recorder.macro.rend(); ++it) {
-        					if (it->frame >= frame) {
-								try {
-									recorder.macro.erase((it + 1).base());
-								} catch (const std::exception& e) {
-									log::debug("wtfffff amaze? - {}",e);
-								}
-							} else break;
-    					}
-						bool fix = false;
-					if (recorder.macro.size() >= 2) {
-							if (recorder.macro.back().holding || (recorder.macro[recorder.macro.size() - 2].holding && !recorder.macro[recorder.macro.size() - 2].player1))
-								fix = true;
-						} else if (recorder.macro.back().holding)
-							fix = true;
-
-						if (fix) {
-						playerData p1;
-						playerData p2;
-						p1 = {
-							0.f,
-							0.f,
-							false,
-							-80085,
-							-80085,
-							-80085
-						};
-						p2 = {
-							0.f,
-							0.f,
-							false,
-							-80085,
-							-80085,
-							-80085
-						};
-						recorder.macro.push_back({false, frame, 1, false, false, p1, p2});
-						recorder.macro.push_back({true, frame, 1, false, false, p1, p2});
-						if (this->m_levelSettings->m_platformerMode) {
-							recorder.macro.push_back({false, frame, 2, false, false, p1, p2});
-							recorder.macro.push_back({true, frame, 2, false, false, p1, p2});
-							recorder.macro.push_back({false, frame, 3, false, false, p1, p2});
-							recorder.macro.push_back({true, frame, 3, false, false, p1, p2});
-						}
-					}
-				}
-				} catch (const std::exception& e) {
-					log::debug("wtfffff? - {}",e);
-				}
-        	} else {
-				if (!recorder.macro.empty())
-					recorder.macro.clear();
-
+        	if (!this->m_isPracticeMode) {
+				recorder.macro.clear();
 				recorder.android = false;
 				recorder.fps = fpsArr[fpsIndex];
-			} 
+			}
    		}
 	}
 
