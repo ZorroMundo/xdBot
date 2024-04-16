@@ -52,7 +52,7 @@ const int playerEnums[2][3] = {
     {cocos2d::enumKeyCodes::KEY_W, cocos2d::enumKeyCodes::KEY_A, cocos2d::enumKeyCodes::KEY_D}
 };
 
-const int fpsArr[6] = {60,120,180,240,360,480};
+const int fpsArr[7] = {60,120,165,180,240,360,480};
 
 void releaseKeys() {
 	for (int row = 0; row < 2; ++row) {
@@ -201,15 +201,15 @@ class RecordLayer : public geode::Popup<std::string const&> {
     CCMenuItemToggler* playing = nullptr;
 protected:
     bool setup(std::string const& value) override {
-        /*auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
-		auto versionLabel = CCLabelBMFont::create("xdBot v1.5.5 - made by Zilko", "chatFont.fnt");
+        auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
+		/*auto versionLabel = CCLabelBMFont::create("xdBot v1.5.5 - made by Zilko", "chatFont.fnt");
 		versionLabel->setOpacity(60);
 		versionLabel->setAnchorPoint(ccp(0.0f,0.5f));
 		versionLabel->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(3, 6));
 		versionLabel->setScale(0.5f);
-		this->addChild(versionLabel);
+		this->addChild(versionLabel);*/
 		this->setTitle("xdBot");
-		auto menu = CCMenu::create();*/
+		auto menu = CCMenu::create();
     	menu->setPosition({0, 0});
     	m_mainLayer->addChild(menu);
 
@@ -370,7 +370,7 @@ public:
 		}
 
 		if (fpsIndex == -1) fpsIndex = 3;
-		else if (fpsIndex == 4) fpsIndex = 0;
+		else if (fpsIndex == 7) fpsIndex = 0;
 
 		fpsLabel->setString(std::to_string(fpsArr[fpsIndex]).c_str());
 		mod->setSavedValue<float>("previous_fps", fpsIndex);
@@ -1543,11 +1543,13 @@ class $modify(EndLevelLayer) {
 
 	void customSetup() {
 		EndLevelLayer::customSetup();
+		clearState(false);
+		/*EndLevelLayer::customSetup();
 		if (mod->getSettingValue<bool>("end_button")) {
 			auto winSize = CCDirector::sharedDirector()->getWinSize();
 			CCSprite* sprite = nullptr;
 			sprite = CCSprite::createWithSpriteFrameName("GJ_playBtn2_001.png");
-			//sprite->setScale(0.350f);
+			sprite->setScale(0.350f);
         	auto btn = CCMenuItemSpriteExtra::create(sprite,
 			this,
 			menu_selector(RecordLayer::openMenu));
@@ -1563,13 +1565,13 @@ class $modify(EndLevelLayer) {
 		if ((!mod->getSettingValue<bool>("auto_safe_mode") || isAndroid) && playedMacro) {
 			auto winSize = CCDirector::sharedDirector()->getWinSize();
 			auto layer = reinterpret_cast<CCLayer*>(this->getChildren()->objectAtIndex(0));
-			/*auto watermarkxd = CCLabelBMFont::create("Recorded with xdBot.", "chatFont.fnt");
+			auto watermarkxd = CCLabelBMFont::create("Recorded with xdBot.", "chatFont.fnt");
 			watermarkxd->setOpacity(60);
 			watermarkxd->setAnchorPoint(ccp(0.0f,0.5f));
 			watermarkxd->setPosition(winSize/2 + ccp(-winSize.width/2, -winSize.height/2) + ccp(3, 6));
 			watermarkxd->setScale(0.5f);
-			layer->addChild(watermarkxd);*/
-		}
+			layer->addChild(watermarkxd);
+		}*/
 	}
 
 	void onReplay(CCObject* s) {
